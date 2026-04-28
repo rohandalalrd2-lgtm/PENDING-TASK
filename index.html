@@ -3,23 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TASK ALERT TERMINAL - VIP EDITION</title>
+    <title>WORK MONITOR</title>
     <style>
-        /* Base sizing */
-        html { font-size: 125%; }
+        html { font-size: 90%; } 
 
         :root { 
             --blue: #00d2ff; 
             --deep-blue: #3a7bd5; 
             --obsidian: #020617; 
-            --slate: #0f172a; 
             --text: #f1f5f9; 
-            --alert-red: #ff3333;
-            --alert-green: #00ff88;
+            --dark-red: #d32f2f;   
+            --alert-orange: #ff9800; 
+            --alert-green: #00ff88;  
         }
 
-        /* --- STRICT UNIFORM TEXT RULE --- */
-        body, button, table, th, td, p, h2, span, div {
+        /* STRICT UNIFORM TEXT RULE */
+        body, button, table, td, p, span, div {
             font-family: 'Segoe UI', sans-serif !important;
             font-weight: bold !important;
             font-size: 1rem !important;
@@ -27,17 +26,27 @@
 
         body { 
             background-color: var(--obsidian); color: var(--text); 
-            margin: 0; display: flex; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; 
+            margin: 0; display: flex; justify-content: center; min-height: 100vh; padding: 15px; box-sizing: border-box; 
         }
         
-        /* --- INCREASED LAYOUT WIDTH --- */
         .container { 
-            width: 98%; max-width: 1600px; background: rgba(15, 23, 42, 0.9); 
+            width: 100%; max-width: 100%; background: rgba(15, 23, 42, 0.9); 
             backdrop-filter: blur(10px); border: 1px solid var(--deep-blue); 
-            border-radius: 12px; padding: 40px; box-shadow: 0 0 50px rgba(0, 210, 255, 0.15); align-self: center;
+            border-radius: 12px; padding: 30px; box-shadow: 0 0 50px rgba(0, 210, 255, 0.15); align-self: center;
+            box-sizing: border-box;
         }
 
-        h2 { color: var(--blue); text-align: center; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); margin-bottom: 20px; }
+        h2 { 
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--blue); 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 4px; 
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); 
+            margin-bottom: 20px; 
+            font-size: 2.2rem !important; 
+            font-weight: bold;
+        }
         
         button { 
             width: auto; padding: 16px 40px; background: linear-gradient(45deg, var(--deep-blue), var(--blue)); 
@@ -46,28 +55,56 @@
         }
         button:hover { filter: brightness(1.2); transform: scale(1.02); }
         
-        .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #1e293b; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        .table-container { 
+            max-height: 65vh; 
+            overflow-y: auto; 
+            overflow-x: auto; 
+            margin-top: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #1e293b; 
+        }
         
-        th { background: #000; color: var(--blue); padding: 18px; text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--deep-blue); white-space: nowrap; }
-        td { padding: 18px; border-bottom: 1px solid #1e293b; text-align: center; transition: background 0.3s; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; } 
+        
+        th { 
+            font-family: 'Segoe UI', sans-serif !important;
+            font-weight: bold !important;
+            font-size: 1.1rem !important; 
+            background: #000; 
+            color: var(--blue); 
+            padding: 14px 10px; 
+            text-align: center; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid var(--deep-blue); 
+            white-space: nowrap; 
+            position: sticky; 
+            top: 0;           
+            z-index: 2;       
+        }
+        
+        td { padding: 12px 10px; border-bottom: 1px solid #1e293b; text-align: center; transition: background 0.3s; white-space: nowrap; }
         
         .property-tag { color: var(--blue); }
-        .person-chip { color: #38bdf8; }
 
         .warning-row td { 
-            background-color: rgba(0, 255, 136, 0.10); color: var(--alert-green) !important;
-            border-bottom: 1px solid var(--alert-green); text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+            background-color: rgba(255, 152, 0, 0.10); color: var(--alert-orange) !important;
+            border-bottom: 1px solid var(--alert-orange); text-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
         }
         .warning-row { animation: pulse 1.35s infinite; }
-        .warning-row .property-tag { color: var(--alert-green) !important; }
+        .warning-row .property-tag { color: var(--alert-orange) !important; }
 
         .critical-row td { 
-            background-color: rgba(255, 51, 51, 0.15); color: var(--alert-red) !important;
-            border-bottom: 1px solid var(--alert-red); text-shadow: 0 0 8px rgba(255, 51, 51, 0.4);
+            background-color: rgba(211, 47, 47, 0.15); color: var(--dark-red) !important;
+            border-bottom: 1px solid var(--dark-red); text-shadow: 0 0 8px rgba(211, 47, 47, 0.4);
         }
         .critical-row { animation: pulse 1.35s infinite; }
-        .critical-row .property-tag, .critical-row .person-chip { color: var(--alert-red) !important; }
+        .critical-row .property-tag { color: var(--dark-red) !important; }
+
+        .complete-row td { 
+            background-color: rgba(0, 255, 136, 0.05); color: var(--alert-green) !important;
+            border-bottom: 1px solid var(--alert-green); 
+        }
+        .complete-row .property-tag { color: var(--alert-green) !important; }
         
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
@@ -79,7 +116,7 @@
 <div class="container">
     <div id="dashboard">
         <div style="text-align: center;">
-            <h2>ACTIVE TASK </h2>
+            <h2>WORK MONITOR</h2>
             <p id="last-sync-text" style="color: #64748b; margin: 0; text-transform: uppercase;">INITIALIZING LINK...</p>
         </div>
         <div class="table-container">
@@ -99,11 +136,10 @@
     let alarmInterval = null; 
     let hasInteracted = false; 
 
-    // Browsers block audio until the user clicks ANYWHERE on the page. 
     document.body.addEventListener('click', () => { hasInteracted = true; }, { once: true });
 
     function playTerminalAlert() {
-        if (!hasInteracted) return; // Skip if browser blocks it
+        if (!hasInteracted) return; 
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             function createBeep(delay, frequency) {
@@ -122,7 +158,6 @@
         } catch (error) { console.log("Audio alert prevented by browser."); }
     }
 
-    // --- MAIN DATA FETCH FUNCTION ---
     async function loadData() {
         const syncBtn = document.getElementById('sync-btn-element');
         syncBtn.innerText = "SYNCING..."; 
@@ -153,37 +188,54 @@
         const tbody = document.getElementById('tbody-rows');
         thead.innerHTML = ""; tbody.innerHTML = "";
 
+        if(data.headers.length < 8) {
+             data.headers.push("COMPLETION DATE");
+        }
+
         data.headers.forEach(h => thead.innerHTML += `<th>${h}</th>`);
         
         let shouldSoundAlarm = false; 
 
         data.rows.forEach(r => {
             let daysRemaining = parseInt(r[5]);
+            let statusValue = String(r[6] || '').trim().toUpperCase();
             let rowClass = ''; 
+            
+            let displayDays = r[5] || ''; 
+            
+            // --- NEW: Status Icon Logic ---
+            let statusIcon = '';
 
-            if (!isNaN(daysRemaining)) {
+            if (statusValue === 'COMPLETE' || statusValue === 'DONE') {
+                rowClass = 'complete-row'; 
+                displayDays = '—'; 
+                statusIcon = '✅ '; // Done Checkmark
+            } else if (!isNaN(daysRemaining)) {
                 if (daysRemaining < 0) {
                     rowClass = 'critical-row'; 
                     shouldSoundAlarm = true; 
+                    statusIcon = '🚨 '; // Overdue Siren
                 } else if (daysRemaining >= 0 && daysRemaining <= 3) {
                     rowClass = 'warning-row';  
                     shouldSoundAlarm = true; 
+                    statusIcon = '⚠️ '; // Warning Triangle
                 }
             }
 
+            // We inject the statusIcon right next to the property name (r[0])
             tbody.innerHTML += `
                 <tr class="${rowClass}">
-                    <td class="property-tag">${r[0] || ''}</td>
+                    <td class="property-tag">${statusIcon}${r[0] || ''}</td>
                     <td>${r[1] || ''}</td>
-                    <td><span class="person-chip">${r[2] || ''}</span></td>
+                    <td>${r[2] || ''}</td>
                     <td>${r[3] || ''}</td>
                     <td>${r[4] || ''}</td>
-                    <td>${r[5] || ''}</td>
+                    <td>${displayDays}</td>
                     <td>${r[6] || ''}</td>
+                    <td>${r[7] || ''}</td> 
                 </tr>`;
         });
 
-        // Alarm Handling
         if (alarmInterval) {
             clearInterval(alarmInterval);
             alarmInterval = null;
@@ -195,10 +247,8 @@
         }
     }
 
-    // Load data immediately when the page opens
     window.onload = () => {
         loadData();
-        // Start Auto-Pilot to sync quietly in the background every 30 seconds
         setInterval(loadData, 30000);
     };
 
