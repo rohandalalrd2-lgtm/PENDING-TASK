@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TASK ALERT TERMINAL - COMMAND CENTER</title>
+    <title>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</title>
     <style>
         :root { 
-            --blue: #00d2ff; 
-            --deep-blue: #3a7bd5; 
-            --obsidian: #020617; 
-            --slate: #0f172a; 
-            --text: #ffffff; 
+            --bg-color: #f3f4f6; 
+            --surface: #ffffff; 
+            --border-color: #e5e7eb;
             
-            /* Status Colors */
-            --alert-red: #ff0000; 
-            --alert-orange: #ff9900;
-            --alert-green: #00ff88;
-            --alert-blue: #00d2ff;
+            /* Professional Status Colors for HUD Numbers */
+            --alert-red: #ef4444; 
+            --alert-yellow: #eab308;
+            --alert-green: #10b981;
         }
 
-        /* --- STRICT UNIFORM TEXT & FULL SCREEN RULES --- */
+        /* FORCES ALL TEXT TO BE BOLD AND BLACK */
+        * {
+            font-weight: bold !important;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
             width: 100vw;
             height: 100vh;
             overflow: hidden; 
-            background-color: var(--obsidian); 
-        }
-
-        body, button, table, th, td, p, h2, span, div, input {
-            font-family: 'Segoe UI', sans-serif !important;
-            font-weight: bold !important;
+            background-color: var(--bg-color); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #000000; 
+            text-transform: uppercase;
         }
         
-        /* --- FULL SCREEN CONTAINER --- */
         .container { 
             width: 100vw; 
             height: 100vh; 
@@ -42,7 +40,6 @@
             box-sizing: border-box; 
             display: flex; 
             flex-direction: column;
-            background: radial-gradient(circle at center, var(--slate) 0%, var(--obsidian) 100%);
         }
 
         #dashboard { 
@@ -50,6 +47,7 @@
             flex-direction: column; 
             height: 100%; 
             width: 100%;
+            margin: 0; 
         }
 
         /* --- TOP HEADER & SEARCH --- */
@@ -57,58 +55,66 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2vh;
+            margin-bottom: 24px;
         }
 
+        .header-spacer { width: 300px; }
+
         h2 { 
-            color: #ffffff; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5vw; 
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); 
+            color: #000000; 
             margin: 0; 
-            font-size: clamp(17px, 2.55vw, 43px) !important; 
+            font-size: 24px;
+            text-align: center;
+            flex-grow: 1;
         }
 
         .search-box {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--deep-blue);
-            color: var(--blue);
-            padding: 1.5vh 2vw;
-            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            color: #000000;
+            padding: 10px 16px;
+            border-radius: 6px;
             width: 300px;
             outline: none;
-            font-size: clamp(10px, 0.85vw, 17px) !important;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             text-transform: uppercase;
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.1);
-            transition: 0.3s;
         }
-        .search-box:focus { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
-        .search-box::placeholder { color: rgba(0, 210, 255, 0.5); }
+        .search-box:focus { 
+            border-color: #000000; 
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); 
+        }
+        .search-box::placeholder { color: #666666; text-transform: uppercase; }
 
         /* --- STATS HUD --- */
         .stats-hud {
             display: flex;
-            gap: 2vw;
-            margin-bottom: 2vh;
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
         .stat-card {
             flex: 1;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid #1e293b;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 1.5vh 2vw;
+            padding: 20px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .stat-label { color: #888; font-size: 0.85vw; text-transform: uppercase; letter-spacing: 2px; }
-        .stat-number { font-size: 2vw; text-shadow: 0 0 10px currentColor; }
-        
-        .color-red { color: var(--alert-red); border-bottom: 2px solid var(--alert-red); }
-        .color-blue { color: var(--alert-blue); border-bottom: 2px solid var(--alert-blue); }
-        .color-green { color: var(--alert-green); border-bottom: 2px solid var(--alert-green); }
+        .stat-label { 
+            color: #000000; 
+            font-size: 13px; 
+            letter-spacing: 0.5px; 
+        }
+        .stat-number { font-size: 28px; }
+        .color-red .stat-number { color: var(--alert-red); }
+        .color-yellow .stat-number { color: var(--alert-yellow); }
+        .color-green .stat-number { color: var(--alert-green); }
 
         /* --- TABLE STYLES --- */
         .table-container { 
@@ -116,84 +122,103 @@
             overflow-y: auto; 
             overflow-x: auto; 
             border-radius: 8px; 
-            border: 1px solid #1e293b; 
-            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color); 
+            background: var(--surface);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
         
         table { width: 100%; border-collapse: collapse; }
         
         th { 
-            background: #000; 
-            color: #ffffff; 
-            padding: 1.5vh 2vw; 
-            text-align: left; 
-            text-transform: uppercase; 
-            border-bottom: 2px solid var(--deep-blue); 
+            background: #e5e7eb; 
+            color: #000000; 
+            padding: 14px 20px; 
+            text-align: center; /* Centered Horizontally */
+            vertical-align: middle; /* Centered Vertically */
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #d1d5db; 
             white-space: nowrap; 
             position: sticky;
             top: 0;
             z-index: 10;
-            font-size: clamp(10px, 0.85vw, 17px) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
         }
         
         td { 
-            padding: 1.5vh 2vw; 
-            border-bottom: 1px solid #1e293b; 
-            text-align: left; 
-            transition: background 0.3s; 
-            white-space: nowrap; 
-            color: #ffffff; 
-            font-size: clamp(8.5px, 0.76vw, 16px) !important;
+            padding: 14px 20px; 
+            border-bottom: 1px solid var(--border-color); 
+            text-align: center; /* Centered Horizontally */
+            vertical-align: middle; /* Centered Vertically */
+            white-space: normal; 
+            word-break: break-word; 
+            font-size: 14px;
+            min-width: 100px; 
+            line-height: 1.5; 
+            transition: background 0.2s; 
         }
 
-        /* --- STATUS ROW STYLES --- */
-        .done-row td { 
-            background-color: rgba(0, 255, 136, 0.15); color: #ffffff !important;
-            border-bottom: 1px solid var(--alert-green); text-shadow: 0 0 4px rgba(0,0,0,0.5);
+        td:nth-child(4), th:nth-child(4), 
+        td:nth-child(5), th:nth-child(5) {
+            min-width: 250px; 
         }
-
-        .pending-row td { 
-            background-color: rgba(0, 210, 255, 0.20); color: #ffffff !important;
-            border-bottom: 1px solid var(--alert-blue); text-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-
-        .warning-row td { 
-            background-color: rgba(255, 153, 0, 0.25); color: #ffffff !important;
-            border-bottom: 1px solid var(--alert-orange); text-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-        .warning-row { animation: pulse 1.35s infinite; }
-
-        .critical-row td { 
-            background-color: rgba(255, 0, 0, 0.25); color: #ffffff !important;
-            border-bottom: 1px solid var(--alert-red); text-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-        .critical-row { animation: pulse 1.35s infinite; }
         
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        td:nth-child(1), th:nth-child(1) {
+            min-width: 60px;
+        }
+
+        /* --- STATUS ROW STYLES & HOVER EFFECTS --- */
+        .row-done { background-color: #f0fdf4 !important; }
+        .row-done:hover td { background-color: #dcfce7 !important; }
+
+        .row-pending { background-color: #fef2f2 !important; }
+        .row-pending:hover td { background-color: #fee2e2 !important; }
+
+        .row-in-progress { background-color: #fefce8 !important; }
+        .row-in-progress:hover td { background-color: #fef08a !important; }
+        
+        .row-default { background-color: #ffffff !important; }
+        .row-default:hover td { background-color: #f3f4f6 !important; }
+
+        td { color: #000000 !important; }
 
         /* --- FOOTER CONTROLS --- */
-        .controls-container { display: flex; justify-content: space-between; align-items: center; margin-top: 2vh; margin-bottom: 1vh; }
+        .controls-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-top: 24px; 
+            padding-bottom: 12px;
+        }
 
-        .sync-text { color: var(--blue); font-size: 0.85vw; text-transform: uppercase; letter-spacing: 2px;}
+        .sync-text { 
+            color: #000000; 
+            font-size: 13px; 
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
 
         button { 
-            padding: 1.5vh 3vw; 
-            background: linear-gradient(45deg, var(--deep-blue), var(--blue)); 
-            color: #ffffff; 
-            border: none; 
-            border-radius: 8px; 
+            padding: 10px 20px; 
+            background: #e5e7eb; 
+            color: #000000 !important; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
             cursor: pointer; 
-            text-transform: uppercase; 
-            transition: 0.3s;
-            font-size: clamp(10px, 0.85vw, 17px) !important;
-            letter-spacing: 2px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
         }
-        button:hover { filter: brightness(1.2); transform: scale(1.02); }
+        button:hover { background: #d1d5db; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:active { transform: translateY(0); }
 
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: var(--obsidian); }
-        ::-webkit-scrollbar-thumb { background: var(--deep-blue); border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -203,22 +228,23 @@
         
         <!-- TOP ROW: TITLE & SEARCH -->
         <div class="header-row">
-            <h2>TASK TERMINAL</h2>
-            <input type="text" id="searchInput" class="search-box" placeholder="SEARCH SYSTEM..." onkeyup="filterTable()">
+            <div class="header-spacer"></div>
+            <h2>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</h2>
+            <input type="text" id="searchInput" class="search-box" placeholder="SEARCH TASKS..." onkeyup="filterTable()">
         </div>
 
         <!-- STATS HUD -->
         <div class="stats-hud">
             <div class="stat-card color-red">
-                <span class="stat-label">Critical</span>
-                <span class="stat-number" id="count-critical">0</span>
-            </div>
-            <div class="stat-card color-blue">
-                <span class="stat-label">Pending</span>
+                <span class="stat-label">PENDING</span>
                 <span class="stat-number" id="count-pending">0</span>
             </div>
+            <div class="stat-card color-yellow">
+                <span class="stat-label">IN PROGRESS</span>
+                <span class="stat-number" id="count-in-progress">0</span>
+            </div>
             <div class="stat-card color-green">
-                <span class="stat-label">Completed</span>
+                <span class="stat-label">COMPLETED</span>
                 <span class="stat-number" id="count-done">0</span>
             </div>
         </div>
@@ -231,18 +257,21 @@
             </table>
         </div>
         
-        <!-- FOOTER: SYNC INFO & BUTTON -->
+        <!-- FOOTER: SYNC INFO & BUTTONS -->
         <div class="controls-container">
-            <div class="sync-text" id="sync-timer-text">NEXT SYNC IN: 30s</div>
-            <button onclick="forceSync()" id="sync-btn-element">FORCE SYNC</button>
+            <div class="sync-text" id="sync-timer-text">NEXT SYNC IN: 30S</div>
+            <div class="btn-group">
+                <button onclick="exportTableToCSV('Logismos_Tasks.csv')">EXPORT CSV</button>
+                <button onclick="forceSync()" id="sync-btn-element">SYNC DATA</button>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
-    // --- IMPORTANT: REPLACE THE URL BELOW WITH YOUR WEB APP DEPLOYMENT URL ---
-    const APP_URL = "https://script.google.com/macros/s/AKfycbz-icU4IRnAOiMgQs7Y3iQS3OPFPBfHYAMPqwtmLpxvx7ecDasYIGFlit30z4FhgM2xlA/exec";
+    // --- CONNECTED WEB APP URL ---
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyhAazJlMKoxYeseMOLs7QPOlEI17oP3Yu5N8vnFAYAZSSx2UyOL-OTfU5OGyyuUQ8q/exec";
 
     let syncInterval;
     let countdownInterval;
@@ -253,7 +282,7 @@
         const timerText = document.getElementById('sync-timer-text');
         
         syncBtn.innerText = "SYNCING..."; 
-        timerText.innerText = "FETCHING SECURE DATA...";
+        timerText.innerText = "FETCHING DATA...";
         
         let url = `${APP_URL}?mode=getData`;
 
@@ -269,11 +298,10 @@
             console.error("SYNC FAILED. RETRYING SHORTLY.");
         }
         
-        syncBtn.innerText = "FORCE SYNC"; 
+        syncBtn.innerText = "SYNC DATA"; 
         resetTimer(); 
     }
 
-    // --- INSTANT SEARCH/FILTER FUNCTION ---
     function filterTable() {
         let input = document.getElementById("searchInput").value.toUpperCase();
         let table = document.getElementById("taskTable");
@@ -289,16 +317,15 @@
         }
     }
 
-    // --- SYNC COUNTDOWN TIMER ---
     function resetTimer() {
         clearInterval(countdownInterval);
         timeLeft = 30;
-        document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}s`;
+        document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}S`;
         
         countdownInterval = setInterval(() => {
             timeLeft--;
             if (timeLeft > 0) {
-                document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}s`;
+                document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}S`;
             }
         }, 1000);
     }
@@ -309,14 +336,73 @@
         syncInterval = setInterval(loadData, 30000);
     }
 
-    // --- SMART DATE PARSER ---
     function parseCustomDate(dateStr) {
         if (!dateStr) return 0;
+        let str = String(dateStr).trim();
+
+        if (str.includes('T') && str.includes('Z')) {
+            return new Date(str).getTime();
+        }
+        
+        let parts = str.split(/[-/]/); 
+        if (parts.length >= 3) {
+            let day, month, year;
+            if (parts[2].length === 4) { 
+                day = parts[0];
+                month = parts[1];
+                year = parts[2];
+                return new Date(`${year}-${month}-${day}T00:00:00`).getTime();
+            } else if (parts[0].length === 4) { 
+                year = parts[0];
+                month = parts[1];
+                day = parts[2].substring(0, 2);
+                return new Date(`${year}-${month}-${day}T00:00:00`).getTime();
+            }
+        }
+
         let d = new Date(dateStr);
         if (!isNaN(d.getTime())) return d.getTime(); 
-        let parts = String(dateStr).split(/[-/]/);
-        if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
         return 0;
+    }
+
+    function formatDateToDDMMYYYY(dateStr) {
+        if (!dateStr) return '';
+        if (typeof dateStr === 'string' && /^\d{2}[-/]\d{2}[-/]\d{4}/.test(dateStr)) {
+            return dateStr.substring(0, 10).replace(/\//g, '-');
+        }
+        let parsedTime = parseCustomDate(dateStr);
+        if (parsedTime === 0) return String(dateStr).split('T')[0];
+
+        let d = new Date(parsedTime);
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+    }
+
+    function exportTableToCSV(filename) {
+        let csv = [];
+        let rows = document.querySelectorAll("table tr");
+        
+        for (let i = 0; i < rows.length; i++) {
+            if(rows[i].style.display !== "none") {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) {
+                    let data = cols[j].innerText.replace(/"/g, '""');
+                    row.push('"' + data + '"');
+                }
+                csv.push(row.join(","));
+            }
+        }
+
+        let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+        let downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     }
 
     function renderDashboard(data) {
@@ -324,92 +410,118 @@
         const tbody = document.getElementById('tbody-rows');
         thead.innerHTML = ""; tbody.innerHTML = "";
 
-        let dateColIndex = -1;
+        const customHeaders = ["SR. NO", "PROPERTY", "DEPARTMENT", "NEW REQUIREMENTS/ ISSUE", "TASK DESCRIPTION", "REQUESTED DATE", "COMPLETION DATE", "STATUS", "DAYS"];
+        customHeaders.forEach(h => {
+            thead.innerHTML += `<th>${h}</th>`;
+        });
+
+        let propIdx = -1, deptIdx = -1, reqIssueIdx = -1, descIdx = -1, reqDateIdx = -1, compDateIdx = -1, statusIdx = -1;
 
         data.headers.forEach((h, index) => {
-            let cleanHeader = String(h).toUpperCase();
-            if (cleanHeader.includes('COMPLITION') || cleanHeader.includes('COMPLETION')) {
-                cleanHeader = 'COMPLETION';
-                dateColIndex = index; 
-            } else if (cleanHeader.includes('DATE') && dateColIndex === -1) {
-                dateColIndex = index; 
-            }
-            thead.innerHTML += `<th>${cleanHeader}</th>`;
+            let clean = String(h).toUpperCase();
+            if (clean.includes('PROP')) propIdx = index;
+            else if (clean.includes('DEPT') || clean.includes('DEPARTMENT')) deptIdx = index;
+            else if (clean.includes('REQUIREMENT') || clean.includes('ISSUE') || clean.includes('NEW')) reqIssueIdx = index;
+            else if (clean.includes('DESC') || clean.includes('TASK')) descIdx = index;
+            else if (clean.includes('REQ') || (clean.includes('DATE') && reqDateIdx === -1)) reqDateIdx = index;
+            else if (clean.includes('COMPL') || clean.includes('COMPLETION')) compDateIdx = index;
+            else if (clean.includes('STATUS')) statusIdx = index;
         });
 
-        if (dateColIndex === -1) dateColIndex = 4;
+        if (propIdx === -1) propIdx = 1;
+        if (deptIdx === -1) deptIdx = 2;
+        if (reqIssueIdx === -1) reqIssueIdx = 3;
+        if (descIdx === -1) descIdx = 4;
+        if (reqDateIdx === -1) reqDateIdx = 5;
+        if (compDateIdx === -1) compDateIdx = 6;
+        if (statusIdx === -1) statusIdx = 7;
 
-        // --- HUD STAT TRACKERS ---
-        let countCritical = 0;
         let countPending = 0;
+        let countInProgress = 0;
         let countDone = 0;
 
-        data.rows.sort((a, b) => {
-            let isDoneA = a.some(col => String(col).trim().toLowerCase() === 'done');
-            let isDoneB = b.some(col => String(col).trim().toLowerCase() === 'done');
+        let validRows = data.rows.filter(r => r.join('').trim() !== '');
 
-            if (isDoneA && !isDoneB) return 1;  
-            if (!isDoneA && isDoneB) return -1; 
+        validRows.sort((a, b) => {
+            let statusA = (a[statusIdx] !== undefined ? String(a[statusIdx]) : '').trim().toLowerCase();
+            let statusB = (b[statusIdx] !== undefined ? String(b[statusIdx]) : '').trim().toLowerCase();
 
-            if (!isDoneA && !isDoneB) {
-                let daysA = parseInt(a[5]);
-                let daysB = parseInt(b[5]);
-                if (isNaN(daysA)) daysA = 9999; 
-                if (isNaN(daysB)) daysB = 9999;
-                return daysA - daysB; 
+            function getStatusWeight(s) {
+                if (s === 'pending') return 1; 
+                if (s === 'in progress' || s === 'in-progress' || s === 'in process' || s === 'in-process') return 2; 
+                if (s === 'done' || s === 'completed') return 3; 
+                return 4; 
             }
 
-            if (isDoneA && isDoneB) {
-                let dateA = parseCustomDate(a[dateColIndex]);
-                let dateB = parseCustomDate(b[dateColIndex]);
-                return dateB - dateA; 
-            }
-            return 0;
+            return getStatusWeight(statusA) - getStatusWeight(statusB);
         });
 
-        data.rows.forEach(r => {
-            if (r.join('').trim() === '') return;
+        // Initialize Dynamic Display Serial Number
+        let displaySrNo = 1;
 
-            let daysRemaining = parseInt(r[5]);
-            let rowClass = ''; 
+        validRows.forEach(r => {
+            // Auto-generate the sequential number
+            let srNo = displaySrNo++; 
 
-            let isDone = r.some(col => String(col).trim().toLowerCase() === 'done');
-            let isPending = r.some(col => String(col).trim().toLowerCase() === 'pending');
+            let prop = r[propIdx] !== undefined ? r[propIdx] : '';
+            let dept = r[deptIdx] !== undefined ? r[deptIdx] : '';
+            let reqIssue = r[reqIssueIdx] !== undefined ? r[reqIssueIdx] : '';
+            let desc = r[descIdx] !== undefined ? r[descIdx] : '';
+            
+            let reqDateRaw = r[reqDateIdx] !== undefined ? r[reqDateIdx] : '';
+            let compDateRaw = r[compDateIdx] !== undefined ? r[compDateIdx] : '';
+            
+            let reqDateStr = formatDateToDDMMYYYY(reqDateRaw);
+            let compDateStr = formatDateToDDMMYYYY(compDateRaw);
+            let status = r[statusIdx] !== undefined ? r[statusIdx] : '';
+            let statusLower = String(status).trim().toLowerCase();
 
-            if (isDone) {
-                rowClass = 'done-row'; 
-                countDone++;
-            } 
-            else if (!isNaN(daysRemaining) && daysRemaining < 0) {
-                rowClass = 'critical-row'; 
-                countCritical++;
-            } 
-            else {
-                rowClass = 'pending-row';
-                if (!isNaN(daysRemaining) && daysRemaining >= 0 && daysRemaining <= 3) {
-                    rowClass = 'warning-row';
+            let daysTaken = '-';
+            let reqTime = parseCustomDate(reqDateRaw);
+            let compTime = parseCustomDate(compDateRaw);
+
+            if (reqTime > 0) {
+                if (compTime > 0) {
+                    daysTaken = Math.round((compTime - reqTime) / (1000 * 60 * 60 * 24));
+                } else if (statusLower === 'pending' || statusLower.includes('progress') || statusLower.includes('process')) {
+                    let today = new Date().getTime();
+                    let daysOpen = Math.round((today - reqTime) / (1000 * 60 * 60 * 24));
+                    daysTaken = daysOpen >= 0 ? `${daysOpen} (OPEN)` : '-';
                 }
-                countPending++;
             }
 
-            let displayDays = isDone ? '-' : (r[5] || '');
-            let rowHtml = '';
+            let rowClass = 'row-default';
 
-            data.headers.forEach((h, index) => {
-                let cellData = r[index] !== undefined ? r[index] : '';
-                if (index === 5) {
-                    rowHtml += `<td>${displayDays}</td>`;
-                } else {
-                    rowHtml += `<td>${cellData}</td>`;
-                }
-            });
+            if (statusLower === 'done' || statusLower === 'completed') {
+                rowClass = 'row-done';
+                countDone++;
+            } 
+            else if (statusLower === 'pending') {
+                rowClass = 'row-pending';
+                countPending++;
+            } 
+            else if (statusLower === 'in progress' || statusLower === 'in-progress' || statusLower === 'in process' || statusLower === 'in-process') {
+                rowClass = 'row-in-progress';
+                countInProgress++;
+            }
+
+            let rowHtml = `
+                <td>${srNo}</td>
+                <td>${prop}</td>
+                <td>${dept}</td>
+                <td>${reqIssue}</td>
+                <td>${desc}</td>
+                <td>${reqDateStr}</td>
+                <td>${compDateStr}</td>
+                <td>${status}</td>
+                <td>${daysTaken}</td>
+            `;
 
             tbody.innerHTML += `<tr class="${rowClass}">${rowHtml}</tr>`;
         });
 
-        // Update HUD DOM
-        document.getElementById('count-critical').innerText = countCritical;
         document.getElementById('count-pending').innerText = countPending;
+        document.getElementById('count-in-progress').innerText = countInProgress;
         document.getElementById('count-done').innerText = countDone;
 
         filterTable(); 
