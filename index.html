@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</title>
     
-    <!-- SheetJS Library for Excel (.xlsx) Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- External Libraries: ExcelJS for Advanced Excel Export & Chart.js for Analytics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* --- LIGHT MODE VARIABLES (DEFAULT) --- */
+        /* --- LIGHT MODE VARIABLES --- */
         :root { 
             --bg-color: #f8fafc; 
             --surface: #ffffff; 
@@ -25,18 +26,19 @@
             --alert-yellow: #eab308;
             --alert-green: #10b981;
 
-            /* Badge Colors (Light Mode) */
+            /* Badge Colors */
             --badge-pending-bg: #fee2e2;
             --badge-pending-txt: #b91c1c;
-            
             --badge-progress-bg: #fef08a;
             --badge-progress-txt: #854d0e;
-            
             --badge-done-bg: #dcfce7;
             --badge-done-txt: #15803d;
 
             --btn-bg: #e2e8f0;
             --btn-hover: #cbd5e1;
+            
+            --skeleton-base: #e2e8f0;
+            --skeleton-shine: #f8fafc;
         }
 
         /* --- DARK MODE VARIABLES --- */
@@ -50,343 +52,259 @@
             --table-header-bg: #0f172a;
             --row-hover: #334155;
             
-            /* Badge Colors (Dark Mode) */
             --badge-pending-bg: #7f1d1d;
             --badge-pending-txt: #fca5a5;
-            
             --badge-progress-bg: #713f12;
             --badge-progress-txt: #fde047;
-            
             --badge-done-bg: #064e3b;
             --badge-done-txt: #86efac;
 
             --btn-bg: #334155;
             --btn-hover: #475569;
+            
+            --skeleton-base: #334155;
+            --skeleton-shine: #475569;
         }
 
-        /* FORCES ALL TEXT TO BE BOLD */
-        * {
-            font-weight: bold !important;
-        }
+        * { font-weight: bold !important; }
 
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; 
-            background-color: var(--bg-color); 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: var(--text-main); 
-            text-transform: uppercase;
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
+            background-color: var(--bg-color); font-family: -apple-system, sans-serif;
+            color: var(--text-main); text-transform: uppercase;
             transition: background-color 0.3s, color 0.3s;
         }
+
+        /* --- SECURITY LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .login-card {
+            background: var(--surface); padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; width: 350px;
+            border: 1px solid var(--border-color);
+        }
+        .login-card h3 { margin-top: 0; color: var(--text-main); font-size: 18px; letter-spacing: 1px; }
+        .login-input {
+            width: 100%; padding: 14px; margin: 20px 0 10px 0; border: 1px solid var(--border-color);
+            border-radius: 6px; background: var(--bg-color); color: var(--text-main);
+            font-size: 20px; text-align: center; letter-spacing: 4px; box-sizing: border-box; outline: none;
+        }
+        .login-input:focus { border-color: var(--text-muted); }
+        .login-btn {
+            width: 100%; background: var(--alert-green); color: #ffffff !important;
+            border: none; padding: 14px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .login-btn:hover { background: #059669; }
+        #login-error { color: var(--alert-red); font-size: 12px; margin-top: 10px; display: none; }
+
         
-        .container { 
-            width: 100vw; 
-            height: 100vh; 
-            padding: 2vh 2vw; 
-            box-sizing: border-box; 
-            display: flex; 
-            flex-direction: column;
-        }
+        .container { width: 100vw; height: 100vh; padding: 2vh 2vw; box-sizing: border-box; display: flex; flex-direction: column; }
+        #dashboard { display: flex; flex-direction: column; height: 100%; width: 100%; margin: 0; }
 
-        #dashboard { 
-            display: flex; 
-            flex-direction: column; 
-            height: 100%; 
-            width: 100%;
-            margin: 0; 
-        }
-
-        /* --- TOP HEADER & SEARCH --- */
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .header-left { 
-            width: 300px; 
-            display: flex; 
-        }
-
+        /* --- HEADER --- */
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header-left { width: 300px; display: flex; gap: 10px; }
+        
+        /* MASSIVE, RESPONSIVE HEADING */
         h2 { 
             color: var(--text-main); 
             margin: 0; 
-            font-size: 24px;
-            text-align: center;
-            flex-grow: 1;
+            font-size: clamp(24px, 2.5vw, 36px); 
+            text-align: center; 
+            flex-grow: 1; 
+            letter-spacing: 1px;
+            white-space: nowrap; 
         }
-
-        .header-right {
-            width: 300px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
+        
+        .header-right { width: 300px; display: flex; justify-content: flex-end; }
+        
         .search-box {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 16px;
-            border-radius: 6px;
-            width: 100%;
-            outline: none;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            text-transform: uppercase;
+            background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 10px 16px; border-radius: 6px; width: 100%; outline: none; font-size: 14px;
         }
-        .search-box:focus { 
-            border-color: var(--text-main); 
-            box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.3); 
-        }
-        .search-box::placeholder { color: var(--text-muted); text-transform: uppercase; }
+        .search-box:focus { border-color: var(--text-main); }
+        .search-box::placeholder { color: var(--text-muted); }
 
-        /* --- VISUAL PROGRESS BAR --- */
-        .progress-wrapper {
-            margin-bottom: 24px;
-            padding: 0 4px;
-        }
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-        .progress-track {
-            background: var(--border-color);
-            border-radius: 999px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .progress-fill {
-            background: var(--alert-green);
-            height: 100%;
-            width: 0%; /* Starts at 0, filled via JS */
-            border-radius: 999px;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* --- PROGRESS BAR --- */
+        .progress-wrapper { margin-bottom: 20px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .progress-track { background: var(--border-color); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; }
+        .progress-fill { background: var(--alert-green); height: 100%; width: 0%; border-radius: 999px; transition: width 1s ease; }
 
-        /* --- STATS HUD --- */
-        .stats-hud {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
+        /* --- STATS HUD & MINI ANALYTICS --- */
+        .stats-hud { display: flex; gap: 20px; margin-bottom: 24px; height: 120px; }
         .stat-card {
-            flex: 1;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: background 0.3s, border 0.3s;
+            flex: 1; background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background 0.3s;
+            min-width: 200px;
         }
-
-        .stat-label { 
-            color: var(--text-main); 
-            font-size: 13px; 
-            letter-spacing: 0.5px; 
-        }
-        .stat-number { font-size: 28px; }
+        .stat-label { color: var(--text-main); font-size: 22px; letter-spacing: 1px; white-space: nowrap; }
+        .stat-number { font-size: 40px; }
         .color-red .stat-number { color: var(--alert-red); }
         .color-yellow .stat-number { color: var(--alert-yellow); }
         .color-green .stat-number { color: var(--alert-green); }
+        
+        .chart-card {
+            flex: 1; background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;
+            min-width: 200px;
+        }
+        .chart-container { height: 100%; width: 100%; max-width: 200px; display: flex; align-items: center; justify-content: center; }
 
-        /* --- TABLE STYLES --- */
-        .table-container { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            overflow-x: auto; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-            background: var(--surface);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        /* --- VIEW CONTAINERS --- */
+        .view-container {
+            flex-grow: 1; overflow-y: auto; overflow-x: auto; border-radius: 8px; 
+            border: 1px solid var(--border-color); background: var(--surface);
         }
         
+        /* Table View */
         table { width: 100%; border-collapse: collapse; }
-        
-        th { 
-            background: var(--table-header-bg); 
-            color: var(--text-main); 
-            padding: 14px 20px; 
-            text-align: center; 
-            vertical-align: middle; 
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border-color); 
-            white-space: nowrap; 
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            transition: background 0.3s, color 0.3s;
-        }
-        
-        td { 
-            padding: 14px 20px; 
-            border-bottom: 1px solid var(--border-color); 
-            text-align: center; 
-            vertical-align: middle; 
-            white-space: normal; 
-            word-break: break-word; 
-            font-size: 14px;
-            min-width: 100px; 
-            line-height: 1.5; 
-            color: var(--text-main) !important;
-            transition: background 0.2s, color 0.3s; 
-        }
-
+        th { background: var(--table-header-bg); padding: 14px; position: sticky; top: 0; z-index: 10; font-size: 12px; }
+        td { padding: 14px; border-bottom: 1px solid var(--border-color); text-align: center; font-size: 13px; }
         tr:hover td { background-color: var(--row-hover) !important; }
-
+        
         td:nth-child(4), th:nth-child(4), 
         td:nth-child(5), th:nth-child(5) {
             min-width: 250px; 
         }
         
-        td:nth-child(1), th:nth-child(1) {
-            min-width: 60px;
+        td:nth-child(6), th:nth-child(6),
+        td:nth-child(7), th:nth-child(7) {
+            white-space: nowrap; 
         }
 
-        /* --- PREMIUM BADGE STYLES --- */
-        .status-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 9999px; /* Pill shape */
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            text-align: center;
-            white-space: nowrap;
+        /* Kanban Board View */
+        .kanban-board {
+            display: none; 
+            gap: 20px; height: 100%; padding: 20px; background: transparent; border: none; box-shadow: none; overflow-x: auto;
         }
-        
-        .badge-pending { 
-            background-color: var(--badge-pending-bg); 
-            color: var(--badge-pending-txt); 
+        .kanban-col {
+            flex: 1; background: var(--surface); border-radius: 8px; border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; overflow: hidden;
+            min-width: 300px;
         }
-        .badge-in-progress { 
-            background-color: var(--badge-progress-bg); 
-            color: var(--badge-progress-txt); 
+        .kanban-header {
+            padding: 14px; background: var(--table-header-bg); border-bottom: 1px solid var(--border-color);
+            text-align: center; font-size: 14px; white-space: nowrap; 
         }
-        .badge-done { 
-            background-color: var(--badge-done-bg); 
-            color: var(--badge-done-txt); 
+        .kanban-cards {
+            padding: 14px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 12px;
         }
-        .badge-default {
-            background-color: var(--border-color);
-            color: var(--text-main);
+        .k-card {
+            background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; text-align: left;
         }
+        .k-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .k-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+        .k-title { font-size: 14px; margin-bottom: 6px; color: var(--text-main); }
+        .k-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .k-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
 
-        /* --- FOOTER CONTROLS --- */
-        .controls-container { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-top: 24px; 
-            padding-bottom: 12px;
-        }
+        /* Badges */
+        .status-badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; white-space: nowrap; }
+        .badge-pending { background: var(--badge-pending-bg); color: var(--badge-pending-txt); }
+        .badge-in-progress { background: var(--badge-progress-bg); color: var(--badge-progress-txt); }
+        .badge-done { background: var(--badge-done-bg); color: var(--badge-done-txt); }
 
-        .sync-text { 
-            color: var(--text-main); 
-            font-size: 13px; 
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 12px;
-        }
+        /* SKELETON ANIMATION */
+        @keyframes pulse { 0% { background-color: var(--skeleton-base); } 50% { background-color: var(--skeleton-shine); } 100% { background-color: var(--skeleton-base); } }
+        .skeleton { animation: pulse 1.5s infinite ease-in-out; border-radius: 4px; }
+        .skel-text { height: 16px; width: 80%; margin: 4px auto; }
+        .skel-card { height: 100px; width: 100%; border-radius: 6px; margin-bottom: 12px; }
 
-        button { 
-            padding: 10px 20px; 
-            background: var(--btn-bg); 
-            color: var(--text-main) !important; 
-            border: 1px solid var(--border-color); 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 14px;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-        }
-        button:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button:active { transform: translateY(0); }
+        /* --- FOOTER --- */
+        .controls-container { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        .sync-text { font-size: 12px; color: var(--text-muted); }
+        button { padding: 10px 16px; background: var(--btn-bg); color: var(--text-main) !important; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        button:hover { background: var(--btn-hover); }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
     </style>
 </head>
 <body>
 
+<!-- SECURITY LOGIN OVERLAY -->
+<div id="login-overlay">
+    <div class="login-card">
+        <h3>SECURE DASHBOARD ACCESS</h3>
+        <input type="password" id="pwd-input" class="login-input" placeholder="••••••••">
+        <button class="login-btn" onclick="checkPassword()">UNLOCK</button>
+        <div id="login-error">ACCESS DENIED. INCORRECT PASSWORD.</div>
+    </div>
+</div>
+
 <div class="container">
     <div id="dashboard">
         
-        <!-- TOP ROW: THEME TOGGLE, TITLE & SEARCH -->
         <div class="header-row">
             <div class="header-left">
                 <button onclick="toggleDarkMode()" id="theme-btn">🌙 DARK MODE</button>
+                <button onclick="toggleView()" id="view-btn">📋 BOARD VIEW</button>
             </div>
-            
             <h2 id="dashboard-title">LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</h2>
-            
             <div class="header-right">
-                <input type="text" id="searchInput" class="search-box" placeholder="SEARCH TASKS..." onkeyup="filterTable()">
+                <input type="text" id="searchInput" class="search-box" placeholder="SEARCH TASKS..." onkeyup="filterData()">
             </div>
         </div>
 
-        <!-- VISUAL PROGRESS BAR -->
         <div class="progress-wrapper">
-            <div class="progress-info">
-                <span>PROJECT COMPLETION</span>
-                <span id="progress-text-display">0%</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progress-fill-bar"></div>
-            </div>
+            <div class="progress-info"><span>PROJECT COMPLETION</span><span id="progress-text-display">0%</span></div>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill-bar"></div></div>
         </div>
 
-        <!-- STATS HUD -->
+        <!-- STATS & ANALYTICS HUD -->
         <div class="stats-hud">
             <div class="stat-card color-red">
-                <span class="stat-label">PENDING</span>
-                <span class="stat-number" id="count-pending">0</span>
+                <span class="stat-label">PENDING</span><span class="stat-number" id="count-pending">0</span>
             </div>
             <div class="stat-card color-yellow">
-                <span class="stat-label">IN PROGRESS</span>
-                <span class="stat-number" id="count-in-progress">0</span>
+                <span class="stat-label">IN PROCESS</span><span class="stat-number" id="count-in-progress">0</span>
             </div>
             <div class="stat-card color-green">
-                <span class="stat-label">COMPLETED</span>
-                <span class="stat-number" id="count-done">0</span>
+                <span class="stat-label">COMPLETED</span><span class="stat-number" id="count-done">0</span>
+            </div>
+            <div class="chart-card">
+                <div class="chart-container"><canvas id="deptChart"></canvas></div>
             </div>
         </div>
 
-        <!-- TABLE -->
-        <div class="table-container">
+        <!-- TABLE VIEW -->
+        <div class="view-container" id="table-view">
             <table id="taskTable">
                 <thead><tr id="thead-row"></tr></thead>
                 <tbody id="tbody-rows"></tbody>
             </table>
         </div>
+
+        <!-- KANBAN BOARD VIEW -->
+        <div class="view-container kanban-board" id="board-view">
+            <div class="kanban-col">
+                <div class="kanban-header">PENDING</div>
+                <div class="kanban-cards" id="kb-pending"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-header">IN PROCESS</div>
+                <div class="kanban-cards" id="kb-progress"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-header">COMPLETED</div>
+                <div class="kanban-cards" id="kb-done"></div>
+            </div>
+        </div>
         
-        <!-- FOOTER: SYNC INFO & BUTTONS -->
         <div class="controls-container">
-            <div class="sync-text" id="sync-timer-text">NEXT SYNC IN: 30S</div>
-            <div class="btn-group">
-                <!-- Changed to trigger Excel export -->
+            <div class="sync-text" id="sync-timer-text">AWAITING UNLOCK...</div>
+            <div style="display:flex; gap:10px;">
+                <!-- Updated Export Button -->
                 <button onclick="exportTableToExcel()">EXPORT EXCEL</button>
-                <button onclick="forceSync()" id="sync-btn-element">SYNC DATA</button>
+                <button onclick="loadData()" id="sync-btn-element">SYNC DATA</button>
             </div>
         </div>
 
@@ -394,315 +312,385 @@
 </div>
 
 <script>
-    // --- CONNECTED WEB APP URL ---
     const APP_URL = "https://script.google.com/macros/s/AKfycbyhAazJlMKoxYeseMOLs7QPOlEI17oP3Yu5N8vnFAYAZSSx2UyOL-OTfU5OGyyuUQ8q/exec";
+    let currentView = 'table';
+    let myDonutChart = null; 
 
-    let syncInterval;
-    let countdownInterval;
-    let timeLeft = 30;
-
-    // --- DARK MODE LOGIC ---
-    function toggleDarkMode() {
-        const body = document.body;
-        const themeBtn = document.getElementById('theme-btn');
-        body.classList.toggle('dark-mode');
-        
-        if (body.classList.contains('dark-mode')) {
-            localStorage.setItem('theme', 'dark');
-            themeBtn.innerText = '☀️ LIGHT MODE';
+    // --- SECURITY LOGIN LOGIC ---
+    function checkPassword() {
+        const pwd = document.getElementById('pwd-input').value;
+        if(pwd === '02021996') {
+            document.getElementById('login-overlay').style.display = 'none';
+            // Start the manual sync INSTANTLY upon unlocking
+            loadData();
         } else {
-            localStorage.setItem('theme', 'light');
-            themeBtn.innerText = '🌙 DARK MODE';
+            document.getElementById('login-error').style.display = 'block';
+            document.getElementById('pwd-input').value = ''; 
         }
     }
 
-    function loadThemePreference() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('theme-btn').innerText = '☀️ LIGHT MODE';
+    document.getElementById('pwd-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { checkPassword(); }
+    });
+
+    // --- DASHBOARD LOGIC ---
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-btn').innerText = isDark ? '☀️ LIGHT MODE' : '🌙 DARK MODE';
+        
+        if (myDonutChart) {
+            Chart.defaults.color = isDark ? '#f8fafc' : '#0f172a';
+            myDonutChart.update();
         }
     }
 
-    // --- DATA SYNCING LOGIC ---
+    function toggleView() {
+        const tv = document.getElementById('table-view');
+        const bv = document.getElementById('board-view');
+        const btn = document.getElementById('view-btn');
+        if (currentView === 'table') {
+            tv.style.display = 'none';
+            bv.style.display = 'flex';
+            btn.innerText = '📊 TABLE VIEW';
+            currentView = 'board';
+        } else {
+            tv.style.display = 'block';
+            bv.style.display = 'none';
+            btn.innerText = '📋 BOARD VIEW';
+            currentView = 'table';
+        }
+    }
+
+    function renderSkeletons() {
+        const tbody = document.getElementById('tbody-rows');
+        const thead = document.getElementById('thead-row');
+        if(thead.innerHTML === "") thead.innerHTML = "<th>...</th><th>...</th><th>...</th><th>...</th>";
+        tbody.innerHTML = "";
+        for(let i=0; i<6; i++) {
+            tbody.innerHTML += `<tr><td colspan="9"><div class="skeleton skel-text"></div></td></tr>`;
+        }
+        document.getElementById('kb-pending').innerHTML = `<div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>`;
+        document.getElementById('kb-progress').innerHTML = `<div class="skeleton skel-card"></div>`;
+        document.getElementById('kb-done').innerHTML = `<div class="skeleton skel-card"></div>`;
+    }
+
+    // --- 100% MANUAL SYNC LOGIC ---
     async function loadData() {
+        const tbody = document.getElementById('tbody-rows');
         const syncBtn = document.getElementById('sync-btn-element');
         const timerText = document.getElementById('sync-timer-text');
+        
+        if (!tbody || tbody.innerHTML.trim() === "") {
+            renderSkeletons();
+        }
         
         syncBtn.innerText = "SYNCING..."; 
         timerText.innerText = "FETCHING DATA...";
         
         let url = `${APP_URL}?mode=getData`;
-
         try {
             const response = await fetch(url);
             const result = await response.json();
             if (!result.error) {
                 renderDashboard(result);
+                let now = new Date();
+                let timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                timerText.innerText = `LAST SYNC: ${timeString}`;
             } else {
                 console.error("ERROR: " + result.error);
+                timerText.innerText = "SYNC FAILED. CHECK CONNECTION.";
             }
         } catch (err) { 
-            console.error("SYNC FAILED. RETRYING SHORTLY.");
+            console.error("SYNC FAILED."); 
+            timerText.innerText = "SYNC FAILED. CHECK CONNECTION.";
         }
         
         syncBtn.innerText = "SYNC DATA"; 
-        resetTimer(); 
     }
 
-    function filterTable() {
+    function filterData() {
         let input = document.getElementById("searchInput").value.toUpperCase();
-        let table = document.getElementById("taskTable");
-        let tr = table.getElementsByTagName("tr");
-
+        
+        let tr = document.getElementById("taskTable").getElementsByTagName("tr");
         for (let i = 1; i < tr.length; i++) { 
-            let rowText = tr[i].innerText.toUpperCase();
-            if (rowText.indexOf(input) > -1) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
-            }
-        }
-    }
-
-    function resetTimer() {
-        clearInterval(countdownInterval);
-        timeLeft = 30;
-        document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}S`;
-        
-        countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                document.getElementById('sync-timer-text').innerText = `NEXT SYNC IN: ${timeLeft}S`;
-            }
-        }, 1000);
-    }
-
-    function forceSync() {
-        clearInterval(syncInterval);
-        loadData();
-        syncInterval = setInterval(loadData, 30000);
-    }
-
-    // --- STRICT DD-MM-YYYY DATE FORMATTER ---
-    function parseCustomDate(dateStr) {
-        if (!dateStr) return 0;
-        let str = String(dateStr).trim();
-
-        if (str.includes('T') && str.includes('Z')) {
-            return new Date(str).getTime();
+            tr[i].style.display = tr[i].innerText.toUpperCase().includes(input) ? "" : "none";
         }
         
-        let parts = str.split(/[-/]/); 
-        if (parts.length >= 3) {
-            let day, month, year;
-            if (parts[2].length === 4) { 
-                day = parts[0];
-                month = parts[1];
-                year = parts[2];
-                return new Date(`${year}-${month}-${day}T00:00:00`).getTime();
-            } else if (parts[0].length === 4) { 
-                year = parts[0];
-                month = parts[1];
-                day = parts[2].substring(0, 2);
-                return new Date(`${year}-${month}-${day}T00:00:00`).getTime();
-            }
-        }
-
-        let d = new Date(dateStr);
-        if (!isNaN(d.getTime())) return d.getTime(); 
-        return 0;
+        let cards = document.querySelectorAll('.k-card');
+        cards.forEach(card => {
+            card.style.display = card.innerText.toUpperCase().includes(input) ? "block" : "none";
+        });
     }
 
-    function formatDateToDDMMYYYY(dateStr) {
-        if (!dateStr) return '';
-        
-        let parsedTime = parseCustomDate(dateStr);
-        if (parsedTime === 0) {
-            if (typeof dateStr === 'string' && /^\d{2}[-/]\d{2}[-/]\d{4}/.test(dateStr)) {
-                return dateStr.substring(0, 10).replace(/\//g, '-');
-            }
-            return String(dateStr).split('T')[0];
+    function parseCustomDate(d) {
+        if (!d) return 0;
+        let s = String(d).trim();
+        if (s.includes('T') && s.includes('Z')) return new Date(s).getTime();
+        let p = s.split(/[-/]/); 
+        if (p.length >= 3) {
+            if (p[2].length === 4) return new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`).getTime();
+            if (p[0].length === 4) return new Date(`${p[0]}-${p[1]}-${p[2].substring(0, 2)}T00:00:00`).getTime();
         }
-
-        let d = new Date(parsedTime);
-        let day = String(d.getDate()).padStart(2, '0');
-        let month = String(d.getMonth() + 1).padStart(2, '0');
-        let year = d.getFullYear();
-        return `${day}-${month}-${year}`;
+        let dt = new Date(d);
+        return isNaN(dt.getTime()) ? 0 : dt.getTime();
     }
 
-    // --- SMART EXCEL (.xlsx) EXPORT ---
-    function exportTableToExcel() {
-        // Dynamically get the title from the <h2> element
-        let titleElement = document.getElementById('dashboard-title');
-        let filename = (titleElement ? titleElement.innerText.trim() : "Task_Export") + ".xlsx";
+    function formatDateToDDMMYYYY(d) {
+        if (!d) return '';
+        let pt = parseCustomDate(d);
+        if (pt === 0) return String(d).split('T')[0];
+        let dt = new Date(pt);
+        return `${String(dt.getDate()).padStart(2, '0')}-${String(dt.getMonth() + 1).padStart(2, '0')}-${dt.getFullYear()}`;
+    }
+
+    // --- SMART EXCEL EXPORT (EXCELJS) ---
+    // This creates actual red formatting and text wrapping inside the downloaded Excel file
+    async function exportTableToExcel() {
+        let title = document.getElementById('dashboard-title').innerText.trim();
+        let workbook = new ExcelJS.Workbook();
+        let worksheet = workbook.addWorksheet("Tasks");
+
+        // Set predefined Column Widths so it looks clean
+        worksheet.columns = [
+            { width: 8 },   // SR NO
+            { width: 20 },  // PROPERTY
+            { width: 20 },  // DEPARTMENT
+            { width: 35 },  // ISSUE
+            { width: 60 },  // DESCRIPTION (Extra wide)
+            { width: 15 },  // REQ DATE
+            { width: 15 },  // COMPL DATE
+            { width: 18 },  // STATUS
+            { width: 12 }   // DAYS
+        ];
+
+        let rows = document.querySelectorAll("#taskTable tr");
         
-        let exportData = [];
-        let rows = document.querySelectorAll("table tr");
-        
-        // Loop through table and build 2D array of text
         for (let i = 0; i < rows.length; i++) {
             if(rows[i].style.display !== "none") {
-                let rowData = [];
                 let cols = rows[i].querySelectorAll("td, th");
+                let excelRow = worksheet.addRow([]);
+                
                 for (let j = 0; j < cols.length; j++) {
-                    // innerText perfectly extracts just the text, ignoring HTML badges
-                    rowData.push(cols[j].innerText.trim());
+                    // Get clean text (ignores HTML spans from the web view)
+                    let cellText = cols[j].innerText.trim();
+                    let cell = excelRow.getCell(j + 1);
+
+                    if (i === 0) {
+                        // Style the Header Row
+                        cell.value = cellText;
+                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    } else {
+                        // Data Rows
+                        // If it's the Issue (3) or Description (4) column, check for Brackets to make Red
+                        if ((j === 3 || j === 4) && (cellText.includes('(') || cellText.includes('['))) {
+                            cell.value = createExcelRichText(cellText);
+                        } else {
+                            cell.value = cellText;
+                        }
+
+                        // ALWAYS Auto Wrap Text & Center Vertically
+                        cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
+
+                        // Left-align text for long description columns for easier reading
+                        if (j === 3 || j === 4) {
+                            cell.alignment.horizontal = 'left';
+                        }
+                    }
                 }
-                exportData.push(rowData);
             }
         }
 
-        // Generate Excel Workbook
-        let wb = XLSX.utils.book_new();
-        let ws = XLSX.utils.aoa_to_sheet(exportData);
-        XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+        // Generate the file and trigger the browser download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${title}.xlsx`;
+        link.click();
+    }
+
+    // Helper function for ExcelJS: parses strings and turns bracketed text into Red Rich Text objects
+    function createExcelRichText(str) {
+        let parts = str.split(/(\([^)]+\)|\[[^\]]+\])/g);
+        let richTextArray = [];
         
-        // Trigger download as .xlsx
-        XLSX.writeFile(wb, filename);
+        parts.forEach(part => {
+            if (!part) return;
+            if ((part.startsWith('(') && part.endsWith(')')) || (part.startsWith('[') && part.endsWith(']'))) {
+                // If it's in brackets, make it Bold and Red (ARGB: FFFF0000)
+                richTextArray.push({ font: { color: { argb: 'FFFF0000' }, bold: true }, text: part });
+            } else {
+                // Normal Text
+                richTextArray.push({ font: { color: { argb: 'FF000000' }, bold: true }, text: part });
+            }
+        });
+        return { richText: richTextArray };
     }
 
     function renderDashboard(data) {
         const thead = document.getElementById('thead-row');
         const tbody = document.getElementById('tbody-rows');
+        const kbPend = document.getElementById('kb-pending');
+        const kbProg = document.getElementById('kb-progress');
+        const kbDone = document.getElementById('kb-done');
+        
         thead.innerHTML = ""; tbody.innerHTML = "";
+        kbPend.innerHTML = ""; kbProg.innerHTML = ""; kbDone.innerHTML = "";
 
-        const customHeaders = ["SR. NO", "PROPERTY", "DEPARTMENT", "NEW REQUIREMENTS/ ISSUE", "TASK DESCRIPTION", "REQUESTED DATE", "COMPLETION DATE", "STATUS", "DAYS"];
-        customHeaders.forEach(h => {
-            thead.innerHTML += `<th>${h}</th>`;
+        const headers = ["SR. NO", "PROPERTY", "DEPARTMENT", "ISSUE", "DESCRIPTION", "REQ DATE", "COMPL DATE", "STATUS", "DAYS"];
+        headers.forEach(h => thead.innerHTML += `<th>${h}</th>`);
+
+        let pIdx=1, dIdx=2, riIdx=3, descIdx=4, rdIdx=5, cdIdx=6, sIdx=7;
+        data.headers.forEach((h, i) => {
+            let c = String(h).toUpperCase();
+            if (c.includes('PROP')) pIdx = i;
+            else if (c.includes('DEPT')) dIdx = i;
+            else if (c.includes('ISSUE')||c.includes('NEW')) riIdx = i;
+            else if (c.includes('DESC')) descIdx = i;
+            else if (c.includes('REQ')) rdIdx = i;
+            else if (c.includes('COMPL')) cdIdx = i;
+            else if (c.includes('STATUS')) sIdx = i;
         });
 
-        let propIdx = -1, deptIdx = -1, reqIssueIdx = -1, descIdx = -1, reqDateIdx = -1, compDateIdx = -1, statusIdx = -1;
-
-        data.headers.forEach((h, index) => {
-            let clean = String(h).toUpperCase();
-            if (clean.includes('PROP')) propIdx = index;
-            else if (clean.includes('DEPT') || clean.includes('DEPARTMENT')) deptIdx = index;
-            else if (clean.includes('REQUIREMENT') || clean.includes('ISSUE') || clean.includes('NEW')) reqIssueIdx = index;
-            else if (clean.includes('DESC') || clean.includes('TASK')) descIdx = index;
-            else if (clean.includes('REQ') || (clean.includes('DATE') && reqDateIdx === -1)) reqDateIdx = index;
-            else if (clean.includes('COMPL') || clean.includes('COMPLETION')) compDateIdx = index;
-            else if (clean.includes('STATUS')) statusIdx = index;
-        });
-
-        if (propIdx === -1) propIdx = 1;
-        if (deptIdx === -1) deptIdx = 2;
-        if (reqIssueIdx === -1) reqIssueIdx = 3;
-        if (descIdx === -1) descIdx = 4;
-        if (reqDateIdx === -1) reqDateIdx = 5;
-        if (compDateIdx === -1) compDateIdx = 6;
-        if (statusIdx === -1) statusIdx = 7;
-
-        let countPending = 0;
-        let countInProgress = 0;
-        let countDone = 0;
+        let cPend = 0, cProg = 0, cDone = 0;
+        let deptCounts = {}; 
 
         let validRows = data.rows.filter(r => r.join('').trim() !== '');
 
         validRows.sort((a, b) => {
-            let statusA = (a[statusIdx] !== undefined ? String(a[statusIdx]) : '').trim().toLowerCase();
-            let statusB = (b[statusIdx] !== undefined ? String(b[statusIdx]) : '').trim().toLowerCase();
-
-            function getStatusWeight(s) {
-                if (s === 'pending') return 1; 
-                if (s === 'in progress' || s === 'in-progress' || s === 'in process' || s === 'in-process') return 2; 
-                if (s === 'done' || s === 'completed') return 3; 
-                return 4; 
-            }
-
-            return getStatusWeight(statusA) - getStatusWeight(statusB);
+            let sa = (a[sIdx] || '').trim().toLowerCase();
+            let sb = (b[sIdx] || '').trim().toLowerCase();
+            let weight = (s) => s==='pending'?1 : (s.includes('progress') || s.includes('process'))?2 : 3;
+            return weight(sa) - weight(sb);
         });
 
-        let displaySrNo = 1;
+        let srNo = 1;
 
         validRows.forEach(r => {
-            let srNo = displaySrNo++; 
-
-            let prop = r[propIdx] !== undefined ? r[propIdx] : '';
-            let dept = r[deptIdx] !== undefined ? r[deptIdx] : '';
-            let reqIssue = r[reqIssueIdx] !== undefined ? r[reqIssueIdx] : '';
-            let desc = r[descIdx] !== undefined ? r[descIdx] : '';
+            let prop = r[pIdx] || '', dept = r[dIdx] || '';
             
-            let reqDateRaw = r[reqDateIdx] !== undefined ? r[reqDateIdx] : '';
-            let compDateRaw = r[compDateIdx] !== undefined ? r[compDateIdx] : '';
+            // --- SMART RED BRACKET FORMATTING FOR HTML VIEW ---
+            let rawReqI = r[riIdx] || '';
+            let formattedReqI = String(rawReqI)
+                .replace(/\(([^)]+)\)/g, '<span style="color: var(--alert-red);">($1)</span>')
+                .replace(/\[([^\]]+)\]/g, '<span style="color: var(--alert-red);">[$1]</span>');
+                
+            let rawDesc = r[descIdx] || '';
+            let formattedDesc = String(rawDesc)
+                .replace(/\(([^)]+)\)/g, '<span style="color: var(--alert-red);">($1)</span>')
+                .replace(/\[([^\]]+)\]/g, '<span style="color: var(--alert-red);">[$1]</span>');
             
-            let reqDateStr = formatDateToDDMMYYYY(reqDateRaw);
-            let compDateStr = formatDateToDDMMYYYY(compDateRaw);
-            
-            let status = r[statusIdx] !== undefined ? r[statusIdx] : '';
-            let statusLower = String(status).trim().toLowerCase();
+            let rdStr = formatDateToDDMMYYYY(r[rdIdx]), cdStr = formatDateToDDMMYYYY(r[cdIdx]);
+            let rawStatus = String(r[sIdx] || '').trim();
+            let sl = rawStatus.toLowerCase();
 
-            let daysTaken = '-';
-            let reqTime = parseCustomDate(reqDateRaw);
-            let compTime = parseCustomDate(compDateRaw);
+            if(dept) deptCounts[dept] = (deptCounts[dept] || 0) + 1;
 
-            if (reqTime > 0) {
-                if (compTime > 0) {
-                    daysTaken = Math.round((compTime - reqTime) / (1000 * 60 * 60 * 24));
-                } else if (statusLower === 'pending' || statusLower.includes('progress') || statusLower.includes('process')) {
-                    let today = new Date().getTime();
-                    let daysOpen = Math.round((today - reqTime) / (1000 * 60 * 60 * 24));
-                    daysTaken = daysOpen >= 0 ? `${daysOpen} (OPEN)` : '-';
+            let days = '-';
+            let rt = parseCustomDate(r[rdIdx]), ct = parseCustomDate(r[cdIdx]);
+            if (rt > 0) {
+                if (ct > 0) days = Math.round((ct - rt) / 86400000);
+                else if (sl !== 'done' && sl !== 'completed') {
+                    let dOpen = Math.round((new Date().getTime() - rt) / 86400000);
+                    days = dOpen >= 0 ? `${dOpen} (OPEN)` : '-';
                 }
             }
 
-            let badgeClass = 'badge-default';
+            let bClass = 'badge-default';
+            let displayStatus = rawStatus.toUpperCase();
 
-            if (statusLower === 'done' || statusLower === 'completed') {
-                badgeClass = 'badge-done';
-                countDone++;
+            if (sl === 'done' || sl === 'completed') { 
+                bClass = 'badge-done'; 
+                displayStatus = 'DONE';
+                cDone++; 
             } 
-            else if (statusLower === 'pending') {
-                badgeClass = 'badge-pending';
-                countPending++;
+            else if (sl === 'pending') { 
+                bClass = 'badge-pending'; 
+                displayStatus = 'PENDING';
+                cPend++; 
             } 
-            else if (statusLower === 'in progress' || statusLower === 'in-progress' || statusLower === 'in process' || statusLower === 'in-process') {
-                badgeClass = 'badge-in-progress';
-                countInProgress++;
+            else if (sl.includes('progress') || sl.includes('process')) { 
+                bClass = 'badge-in-progress'; 
+                displayStatus = 'IN PROCESS'; 
+                cProg++; 
             }
 
-            let rowHtml = `
-                <td>${srNo}</td>
-                <td>${prop}</td>
-                <td>${dept}</td>
-                <td>${reqIssue}</td>
-                <td>${desc}</td>
-                <td>${reqDateStr}</td>
-                <td>${compDateStr}</td>
-                <td><span class="status-badge ${badgeClass}">${status}</span></td>
-                <td>${daysTaken}</td>
-            `;
+            tbody.innerHTML += `<tr>
+                <td>${srNo}</td><td>${prop}</td><td>${dept}</td><td>${formattedReqI}</td>
+                <td style="text-align: left;">${formattedDesc}</td><td>${rdStr}</td><td>${cdStr}</td>
+                <td><span class="status-badge ${bClass}">${displayStatus}</span></td><td>${days}</td>
+            </tr>`;
 
-            tbody.innerHTML += `<tr>${rowHtml}</tr>`;
+            let cardHtml = `
+                <div class="k-card">
+                    <div class="k-header"><span>#${srNo} | ${prop}</span> <b>${dept}</b></div>
+                    <div class="k-title">${formattedReqI}</div>
+                    <div class="k-desc">${formattedDesc}</div>
+                    <div class="k-footer"><span class="status-badge ${bClass}">${displayStatus}</span> <span style="color:var(--text-muted)">⏳ ${days}</span></div>
+                </div>`;
+            
+            if (sl === 'done' || sl === 'completed') kbDone.innerHTML += cardHtml;
+            else if (sl.includes('progress') || sl.includes('process')) kbProg.innerHTML += cardHtml;
+            else kbPend.innerHTML += cardHtml;
+
+            srNo++;
         });
 
-        // Update HUD display numbers
-        document.getElementById('count-pending').innerText = countPending;
-        document.getElementById('count-in-progress').innerText = countInProgress;
-        document.getElementById('count-done').innerText = countDone;
+        document.getElementById('count-pending').innerText = cPend;
+        document.getElementById('count-in-progress').innerText = cProg;
+        document.getElementById('count-done').innerText = cDone;
 
-        // --- UPDATE PROGRESS BAR ---
-        let totalTasks = validRows.length;
-        let completionPercentage = 0;
+        let pct = validRows.length > 0 ? Math.round((cDone / validRows.length) * 100) : 0;
+        document.getElementById('progress-text-display').innerText = pct + '%';
+        setTimeout(() => document.getElementById('progress-fill-bar').style.width = pct + '%', 100);
+
+        updateChart(deptCounts);
+        filterData(); 
+    }
+
+    function updateChart(deptCounts) {
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        const labels = Object.keys(deptCounts);
+        const data = Object.values(deptCounts);
         
-        if (totalTasks > 0) {
-            completionPercentage = Math.round((countDone / totalTasks) * 100);
+        const bgColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+        if (myDonutChart) {
+            myDonutChart.data.labels = labels;
+            myDonutChart.data.datasets[0].data = data;
+            myDonutChart.update();
+        } else {
+            Chart.defaults.color = document.body.classList.contains('dark-mode') ? '#f8fafc' : '#0f172a';
+            myDonutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { padding: 10, cornerRadius: 4 }
+                    }
+                }
+            });
         }
-        
-        document.getElementById('progress-text-display').innerText = completionPercentage + '%';
-        // Add a tiny delay to ensure the CSS animation fires smoothly after load
-        setTimeout(() => {
-            document.getElementById('progress-fill-bar').style.width = completionPercentage + '%';
-        }, 100);
-
-        filterTable(); 
     }
 
     window.onload = () => {
-        loadThemePreference(); 
-        forceSync(); 
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-btn').innerText = '☀️ LIGHT MODE';
+        }
+        
+        document.getElementById('pwd-input').focus();
     };
 </script>
 </body>
-</html>S
+</html>
