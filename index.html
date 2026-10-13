@@ -29,10 +29,16 @@
             /* Badge Colors */
             --badge-pending-bg: #fee2e2;
             --badge-pending-txt: #b91c1c;
+            
             --badge-progress-bg: #fef08a;
             --badge-progress-txt: #854d0e;
+            
             --badge-done-bg: #dcfce7;
             --badge-done-txt: #15803d;
+
+            /* NEW: Distinct Indigo/Blue Color for WITHDRAWN */
+            --badge-withdrawn-bg: #e0e7ff; 
+            --badge-withdrawn-txt: #3730a3;
 
             --btn-bg: #e2e8f0;
             --btn-hover: #cbd5e1;
@@ -54,10 +60,16 @@
             
             --badge-pending-bg: #7f1d1d;
             --badge-pending-txt: #fca5a5;
+            
             --badge-progress-bg: #713f12;
             --badge-progress-txt: #fde047;
+            
             --badge-done-bg: #064e3b;
             --badge-done-txt: #86efac;
+
+            /* NEW: Distinct Indigo/Blue Color for WITHDRAWN (Dark Mode) */
+            --badge-withdrawn-bg: #312e81; 
+            --badge-withdrawn-txt: #c7d2fe;
 
             --btn-bg: #334155;
             --btn-hover: #475569;
@@ -143,8 +155,11 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background 0.3s;
             min-width: 200px;
         }
+        
+        /* HUGE HUD LABELS */
         .stat-label { color: var(--text-main); font-size: 22px; letter-spacing: 1px; white-space: nowrap; }
         .stat-number { font-size: 40px; }
+        
         .color-red .stat-number { color: var(--alert-red); }
         .color-yellow .stat-number { color: var(--alert-yellow); }
         .color-green .stat-number { color: var(--alert-green); }
@@ -187,7 +202,7 @@
         .kanban-col {
             flex: 1; background: var(--surface); border-radius: 8px; border: 1px solid var(--border-color);
             display: flex; flex-direction: column; overflow: hidden;
-            min-width: 300px;
+            min-width: 300px; 
         }
         .kanban-header {
             padding: 14px; background: var(--table-header-bg); border-bottom: 1px solid var(--border-color);
@@ -211,6 +226,7 @@
         .badge-pending { background: var(--badge-pending-bg); color: var(--badge-pending-txt); }
         .badge-in-progress { background: var(--badge-progress-bg); color: var(--badge-progress-txt); }
         .badge-done { background: var(--badge-done-bg); color: var(--badge-done-txt); }
+        .badge-withdrawn { background: var(--badge-withdrawn-bg); color: var(--badge-withdrawn-txt); }
 
         /* SKELETON ANIMATION */
         @keyframes pulse { 0% { background-color: var(--skeleton-base); } 50% { background-color: var(--skeleton-shine); } 100% { background-color: var(--skeleton-base); } }
@@ -297,14 +313,17 @@
                 <div class="kanban-header">COMPLETED</div>
                 <div class="kanban-cards" id="kb-done"></div>
             </div>
+            <div class="kanban-col">
+                <div class="kanban-header">WITHDRAWN</div>
+                <div class="kanban-cards" id="kb-withdrawn"></div>
+            </div>
         </div>
         
         <div class="controls-container">
             <div class="sync-text" id="sync-timer-text">AWAITING UNLOCK...</div>
             <div style="display:flex; gap:10px;">
-                <!-- Updated Export Button -->
                 <button onclick="exportTableToExcel()">EXPORT EXCEL</button>
-                <button onclick="loadData()" id="sync-btn-element">SYNC DATA</button>
+                <button onclick="forceSync()" id="sync-btn-element">SYNC DATA</button>
             </div>
         </div>
 
@@ -313,6 +332,7 @@
 
 <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyhAazJlMKoxYeseMOLs7QPOlEI17oP3Yu5N8vnFAYAZSSx2UyOL-OTfU5OGyyuUQ8q/exec";
+    let syncInterval;
     let currentView = 'table';
     let myDonutChart = null; 
 
@@ -321,8 +341,8 @@
         const pwd = document.getElementById('pwd-input').value;
         if(pwd === '02021996') {
             document.getElementById('login-overlay').style.display = 'none';
-            // Start the manual sync INSTANTLY upon unlocking
-            loadData();
+            // Instantly start the initial fetch and background Auto-Sync upon unlock
+            forceSync();
         } else {
             document.getElementById('login-error').style.display = 'block';
             document.getElementById('pwd-input').value = ''; 
@@ -374,14 +394,23 @@
         document.getElementById('kb-pending').innerHTML = `<div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>`;
         document.getElementById('kb-progress').innerHTML = `<div class="skeleton skel-card"></div>`;
         document.getElementById('kb-done').innerHTML = `<div class="skeleton skel-card"></div>`;
+        document.getElementById('kb-withdrawn').innerHTML = `<div class="skeleton skel-card"></div>`;
     }
 
-    // --- 100% MANUAL SYNC LOGIC ---
+    // --- AUTO-SYNC ENGINE ---
+    function forceSync() {
+        clearInterval(syncInterval);
+        loadData(); // Fetch right now
+        syncInterval = setInterval(loadData, 30000); // Repeat automatically every 30s silently
+    }
+
     async function loadData() {
         const tbody = document.getElementById('tbody-rows');
         const syncBtn = document.getElementById('sync-btn-element');
         const timerText = document.getElementById('sync-timer-text');
         
+        // ONLY show the loading skeleton if the table is completely empty (First Load)
+        // This prevents the screen from flashing grey every 30 seconds.
         if (!tbody || tbody.innerHTML.trim() === "") {
             renderSkeletons();
         }
@@ -446,23 +475,15 @@
     }
 
     // --- SMART EXCEL EXPORT (EXCELJS) ---
-    // This creates actual red formatting and text wrapping inside the downloaded Excel file
     async function exportTableToExcel() {
         let title = document.getElementById('dashboard-title').innerText.trim();
         let workbook = new ExcelJS.Workbook();
         let worksheet = workbook.addWorksheet("Tasks");
 
-        // Set predefined Column Widths so it looks clean
         worksheet.columns = [
-            { width: 8 },   // SR NO
-            { width: 20 },  // PROPERTY
-            { width: 20 },  // DEPARTMENT
-            { width: 35 },  // ISSUE
-            { width: 60 },  // DESCRIPTION (Extra wide)
-            { width: 15 },  // REQ DATE
-            { width: 15 },  // COMPL DATE
-            { width: 18 },  // STATUS
-            { width: 12 }   // DAYS
+            { width: 8 },   { width: 20 },  { width: 20 },  
+            { width: 35 },  { width: 60 },  { width: 15 },  
+            { width: 15 },  { width: 18 },  { width: 12 }   
         ];
 
         let rows = document.querySelectorAll("#taskTable tr");
@@ -473,38 +494,52 @@
                 let excelRow = worksheet.addRow([]);
                 
                 for (let j = 0; j < cols.length; j++) {
-                    // Get clean text (ignores HTML spans from the web view)
                     let cellText = cols[j].innerText.trim();
                     let cell = excelRow.getCell(j + 1);
 
                     if (i === 0) {
-                        // Style the Header Row
+                        // HEADER ROW
                         cell.value = cellText;
                         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                     } else {
-                        // Data Rows
-                        // If it's the Issue (3) or Description (4) column, check for Brackets to make Red
+                        // DATA ROWS: Handle Bracket Red Text
                         if ((j === 3 || j === 4) && (cellText.includes('(') || cellText.includes('['))) {
                             cell.value = createExcelRichText(cellText);
                         } else {
                             cell.value = cellText;
                         }
 
-                        // ALWAYS Auto Wrap Text & Center Vertically
+                        // ALWAYS AUTO-WRAP
                         cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
+                        if (j === 3 || j === 4) cell.alignment.horizontal = 'left';
 
-                        // Left-align text for long description columns for easier reading
-                        if (j === 3 || j === 4) {
-                            cell.alignment.horizontal = 'left';
+                        // --- NEW EXCEL STATUS COLORS ---
+                        if (j === 7) { 
+                            let stat = cellText.toUpperCase();
+                            if (stat === 'DONE' || stat === 'COMPLETED') {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+                                cell.font = { color: { argb: 'FF15803D' }, bold: true };
+                            } else if (stat === 'PENDING') {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                                cell.font = { color: { argb: 'FFB91C1C' }, bold: true };
+                            } else if (stat.includes('PROCESS') || stat.includes('PROGRESS')) {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF08A' } };
+                                cell.font = { color: { argb: 'FF854D0E' }, bold: true };
+                            } else if (stat === 'WITHDRAWN') {
+                                // Updated to Indigo/Blue
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
+                                cell.font = { color: { argb: 'FF3730A3' }, bold: true };
+                            } else {
+                                cell.font = { bold: true }; // Default Fallback
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Generate the file and trigger the browser download
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement("a");
@@ -513,7 +548,6 @@
         link.click();
     }
 
-    // Helper function for ExcelJS: parses strings and turns bracketed text into Red Rich Text objects
     function createExcelRichText(str) {
         let parts = str.split(/(\([^)]+\)|\[[^\]]+\])/g);
         let richTextArray = [];
@@ -521,10 +555,8 @@
         parts.forEach(part => {
             if (!part) return;
             if ((part.startsWith('(') && part.endsWith(')')) || (part.startsWith('[') && part.endsWith(']'))) {
-                // If it's in brackets, make it Bold and Red (ARGB: FFFF0000)
                 richTextArray.push({ font: { color: { argb: 'FFFF0000' }, bold: true }, text: part });
             } else {
-                // Normal Text
                 richTextArray.push({ font: { color: { argb: 'FF000000' }, bold: true }, text: part });
             }
         });
@@ -537,9 +569,10 @@
         const kbPend = document.getElementById('kb-pending');
         const kbProg = document.getElementById('kb-progress');
         const kbDone = document.getElementById('kb-done');
+        const kbWithdrawn = document.getElementById('kb-withdrawn');
         
         thead.innerHTML = ""; tbody.innerHTML = "";
-        kbPend.innerHTML = ""; kbProg.innerHTML = ""; kbDone.innerHTML = "";
+        kbPend.innerHTML = ""; kbProg.innerHTML = ""; kbDone.innerHTML = ""; kbWithdrawn.innerHTML = "";
 
         const headers = ["SR. NO", "PROPERTY", "DEPARTMENT", "ISSUE", "DESCRIPTION", "REQ DATE", "COMPL DATE", "STATUS", "DAYS"];
         headers.forEach(h => thead.innerHTML += `<th>${h}</th>`);
@@ -556,15 +589,16 @@
             else if (c.includes('STATUS')) sIdx = i;
         });
 
-        let cPend = 0, cProg = 0, cDone = 0;
+        let cPend = 0, cProg = 0, cDone = 0, cWithdrawn = 0;
         let deptCounts = {}; 
 
         let validRows = data.rows.filter(r => r.join('').trim() !== '');
 
+        // Sort: Pending (Top) -> In Process -> Done -> Withdrawn (Bottom)
         validRows.sort((a, b) => {
             let sa = (a[sIdx] || '').trim().toLowerCase();
             let sb = (b[sIdx] || '').trim().toLowerCase();
-            let weight = (s) => s==='pending'?1 : (s.includes('progress') || s.includes('process'))?2 : 3;
+            let weight = (s) => s==='pending'?1 : (s.includes('progress') || s.includes('process'))?2 : s==='withdrawn'?4 : 3;
             return weight(sa) - weight(sb);
         });
 
@@ -573,7 +607,6 @@
         validRows.forEach(r => {
             let prop = r[pIdx] || '', dept = r[dIdx] || '';
             
-            // --- SMART RED BRACKET FORMATTING FOR HTML VIEW ---
             let rawReqI = r[riIdx] || '';
             let formattedReqI = String(rawReqI)
                 .replace(/\(([^)]+)\)/g, '<span style="color: var(--alert-red);">($1)</span>')
@@ -588,13 +621,14 @@
             let rawStatus = String(r[sIdx] || '').trim();
             let sl = rawStatus.toLowerCase();
 
-            if(dept) deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+            // Ignore Withdrawn tasks from the Chart counts entirely
+            if(dept && sl !== 'withdrawn') deptCounts[dept] = (deptCounts[dept] || 0) + 1;
 
             let days = '-';
             let rt = parseCustomDate(r[rdIdx]), ct = parseCustomDate(r[cdIdx]);
             if (rt > 0) {
                 if (ct > 0) days = Math.round((ct - rt) / 86400000);
-                else if (sl !== 'done' && sl !== 'completed') {
+                else if (sl !== 'done' && sl !== 'completed' && sl !== 'withdrawn') {
                     let dOpen = Math.round((new Date().getTime() - rt) / 86400000);
                     days = dOpen >= 0 ? `${dOpen} (OPEN)` : '-';
                 }
@@ -603,7 +637,13 @@
             let bClass = 'badge-default';
             let displayStatus = rawStatus.toUpperCase();
 
-            if (sl === 'done' || sl === 'completed') { 
+            // Set Badges and Counters
+            if (sl === 'withdrawn') {
+                bClass = 'badge-withdrawn';
+                displayStatus = 'WITHDRAWN';
+                cWithdrawn++;
+            }
+            else if (sl === 'done' || sl === 'completed') { 
                 bClass = 'badge-done'; 
                 displayStatus = 'DONE';
                 cDone++; 
@@ -633,18 +673,24 @@
                     <div class="k-footer"><span class="status-badge ${bClass}">${displayStatus}</span> <span style="color:var(--text-muted)">⏳ ${days}</span></div>
                 </div>`;
             
-            if (sl === 'done' || sl === 'completed') kbDone.innerHTML += cardHtml;
+            // Route Card to Correct Kanban Column
+            if (sl === 'withdrawn') kbWithdrawn.innerHTML += cardHtml;
+            else if (sl === 'done' || sl === 'completed') kbDone.innerHTML += cardHtml;
             else if (sl.includes('progress') || sl.includes('process')) kbProg.innerHTML += cardHtml;
             else kbPend.innerHTML += cardHtml;
 
             srNo++;
         });
 
+        // Update HUD Counters (Withdrawn is explicitly not counted here)
         document.getElementById('count-pending').innerText = cPend;
         document.getElementById('count-in-progress').innerText = cProg;
         document.getElementById('count-done').innerText = cDone;
 
-        let pct = validRows.length > 0 ? Math.round((cDone / validRows.length) * 100) : 0;
+        // Calculate Project Completion % (Excluding Withdrawn tasks)
+        let activeTasks = validRows.length - cWithdrawn;
+        let pct = activeTasks > 0 ? Math.round((cDone / activeTasks) * 100) : 0;
+        
         document.getElementById('progress-text-display').innerText = pct + '%';
         setTimeout(() => document.getElementById('progress-fill-bar').style.width = pct + '%', 100);
 
