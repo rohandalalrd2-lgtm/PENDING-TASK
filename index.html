@@ -5,18 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</title>
     <style>
+        /* --- LIGHT MODE VARIABLES (DEFAULT) --- */
         :root { 
-            --bg-color: #f3f4f6; 
+            --bg-color: #f8fafc; 
             --surface: #ffffff; 
-            --border-color: #e5e7eb;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a; 
+            --text-muted: #64748b;
             
-            /* Professional Status Colors for HUD Numbers */
+            --table-header-bg: #f1f5f9;
+            --row-hover: #f8fafc;
+            
+            /* HUD Colors */
             --alert-red: #ef4444; 
             --alert-yellow: #eab308;
             --alert-green: #10b981;
+
+            /* Badge Colors (Light Mode) */
+            --badge-pending-bg: #fee2e2;
+            --badge-pending-txt: #b91c1c;
+            
+            --badge-progress-bg: #fef08a;
+            --badge-progress-txt: #854d0e;
+            
+            --badge-done-bg: #dcfce7;
+            --badge-done-txt: #15803d;
+
+            --btn-bg: #e2e8f0;
+            --btn-hover: #cbd5e1;
         }
 
-        /* FORCES ALL TEXT TO BE BOLD AND BLACK */
+        /* --- DARK MODE VARIABLES --- */
+        body.dark-mode {
+            --bg-color: #0f172a; 
+            --surface: #1e293b; 
+            --border-color: #334155;
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+            
+            --table-header-bg: #0f172a;
+            --row-hover: #334155;
+            
+            /* Badge Colors (Dark Mode) */
+            --badge-pending-bg: #7f1d1d;
+            --badge-pending-txt: #fca5a5;
+            
+            --badge-progress-bg: #713f12;
+            --badge-progress-txt: #fde047;
+            
+            --badge-done-bg: #064e3b;
+            --badge-done-txt: #86efac;
+
+            --btn-bg: #334155;
+            --btn-hover: #475569;
+        }
+
+        /* FORCES ALL TEXT TO BE BOLD */
         * {
             font-weight: bold !important;
         }
@@ -29,8 +73,9 @@
             overflow: hidden; 
             background-color: var(--bg-color); 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #000000; 
+            color: var(--text-main); 
             text-transform: uppercase;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .container { 
@@ -55,26 +100,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        .header-spacer { width: 300px; }
+        .header-left { 
+            width: 300px; 
+            display: flex; 
+        }
 
         h2 { 
-            color: #000000; 
+            color: var(--text-main); 
             margin: 0; 
             font-size: 24px;
             text-align: center;
             flex-grow: 1;
         }
 
+        .header-right {
+            width: 300px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
         .search-box {
             background: var(--surface);
             border: 1px solid var(--border-color);
-            color: #000000;
+            color: var(--text-main);
             padding: 10px 16px;
             border-radius: 6px;
-            width: 300px;
+            width: 100%;
             outline: none;
             font-size: 14px;
             transition: all 0.2s ease;
@@ -82,10 +137,39 @@
             text-transform: uppercase;
         }
         .search-box:focus { 
-            border-color: #000000; 
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); 
+            border-color: var(--text-main); 
+            box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.3); 
         }
-        .search-box::placeholder { color: #666666; text-transform: uppercase; }
+        .search-box::placeholder { color: var(--text-muted); text-transform: uppercase; }
+
+        /* --- VISUAL PROGRESS BAR --- */
+        .progress-wrapper {
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .progress-track {
+            background: var(--border-color);
+            border-radius: 999px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .progress-fill {
+            background: var(--alert-green);
+            height: 100%;
+            width: 0%; /* Starts at 0, filled via JS */
+            border-radius: 999px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         /* --- STATS HUD --- */
         .stats-hud {
@@ -104,10 +188,11 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: background 0.3s, border 0.3s;
         }
 
         .stat-label { 
-            color: #000000; 
+            color: var(--text-main); 
             font-size: 13px; 
             letter-spacing: 0.5px; 
         }
@@ -130,33 +215,38 @@
         table { width: 100%; border-collapse: collapse; }
         
         th { 
-            background: #e5e7eb; 
-            color: #000000; 
+            background: var(--table-header-bg); 
+            color: var(--text-main); 
             padding: 14px 20px; 
-            text-align: center; /* Centered Horizontally */
-            vertical-align: middle; /* Centered Vertically */
+            text-align: center; 
+            vertical-align: middle; 
             font-size: 12px;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid #d1d5db; 
+            border-bottom: 2px solid var(--border-color); 
             white-space: nowrap; 
             position: sticky;
             top: 0;
             z-index: 10;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            transition: background 0.3s, color 0.3s;
         }
         
         td { 
             padding: 14px 20px; 
             border-bottom: 1px solid var(--border-color); 
-            text-align: center; /* Centered Horizontally */
-            vertical-align: middle; /* Centered Vertically */
+            text-align: center; 
+            vertical-align: middle; 
             white-space: normal; 
             word-break: break-word; 
             font-size: 14px;
             min-width: 100px; 
             line-height: 1.5; 
-            transition: background 0.2s; 
+            color: var(--text-main) !important;
+            transition: background 0.2s, color 0.3s; 
         }
+
+        /* Clean row hover effect (instead of full color rows) */
+        tr:hover td { background-color: var(--row-hover) !important; }
 
         td:nth-child(4), th:nth-child(4), 
         td:nth-child(5), th:nth-child(5) {
@@ -167,20 +257,33 @@
             min-width: 60px;
         }
 
-        /* --- STATUS ROW STYLES & HOVER EFFECTS --- */
-        .row-done { background-color: #f0fdf4 !important; }
-        .row-done:hover td { background-color: #dcfce7 !important; }
-
-        .row-pending { background-color: #fef2f2 !important; }
-        .row-pending:hover td { background-color: #fee2e2 !important; }
-
-        .row-in-progress { background-color: #fefce8 !important; }
-        .row-in-progress:hover td { background-color: #fef08a !important; }
+        /* --- PREMIUM BADGE STYLES --- */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 9999px; /* Pill shape */
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            white-space: nowrap;
+        }
         
-        .row-default { background-color: #ffffff !important; }
-        .row-default:hover td { background-color: #f3f4f6 !important; }
-
-        td { color: #000000 !important; }
+        .badge-pending { 
+            background-color: var(--badge-pending-bg); 
+            color: var(--badge-pending-txt); 
+        }
+        .badge-in-progress { 
+            background-color: var(--badge-progress-bg); 
+            color: var(--badge-progress-txt); 
+        }
+        .badge-done { 
+            background-color: var(--badge-done-bg); 
+            color: var(--badge-done-txt); 
+        }
+        .badge-default {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
 
         /* --- FOOTER CONTROLS --- */
         .controls-container { 
@@ -192,7 +295,7 @@
         }
 
         .sync-text { 
-            color: #000000; 
+            color: var(--text-main); 
             font-size: 13px; 
         }
         
@@ -203,22 +306,22 @@
 
         button { 
             padding: 10px 20px; 
-            background: #e5e7eb; 
-            color: #000000 !important; 
-            border: 1px solid #d1d5db; 
+            background: var(--btn-bg); 
+            color: var(--text-main) !important; 
+            border: 1px solid var(--border-color); 
             border-radius: 6px; 
             cursor: pointer; 
             font-size: 14px;
             transition: all 0.2s ease;
             text-transform: uppercase;
         }
-        button:hover { background: #d1d5db; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         button:active { transform: translateY(0); }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -226,11 +329,28 @@
 <div class="container">
     <div id="dashboard">
         
-        <!-- TOP ROW: TITLE & SEARCH -->
+        <!-- TOP ROW: THEME TOGGLE, TITLE & SEARCH -->
         <div class="header-row">
-            <div class="header-spacer"></div>
-            <h2>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</h2>
-            <input type="text" id="searchInput" class="search-box" placeholder="SEARCH TASKS..." onkeyup="filterTable()">
+            <div class="header-left">
+                <button onclick="toggleDarkMode()" id="theme-btn">🌙 DARK MODE</button>
+            </div>
+            
+            <h2 id="dashboard-title">LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</h2>
+            
+            <div class="header-right">
+                <input type="text" id="searchInput" class="search-box" placeholder="SEARCH TASKS..." onkeyup="filterTable()">
+            </div>
+        </div>
+
+        <!-- VISUAL PROGRESS BAR -->
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <span>WORK COMPLETION</span>
+                <span id="progress-text-display">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill-bar"></div>
+            </div>
         </div>
 
         <!-- STATS HUD -->
@@ -261,7 +381,7 @@
         <div class="controls-container">
             <div class="sync-text" id="sync-timer-text">NEXT SYNC IN: 30S</div>
             <div class="btn-group">
-                <button onclick="exportTableToCSV('Logismos_Tasks.csv')">EXPORT CSV</button>
+                <button onclick="exportTableToCSV()">EXPORT CSV</button>
                 <button onclick="forceSync()" id="sync-btn-element">SYNC DATA</button>
             </div>
         </div>
@@ -277,6 +397,30 @@
     let countdownInterval;
     let timeLeft = 30;
 
+    // --- DARK MODE LOGIC ---
+    function toggleDarkMode() {
+        const body = document.body;
+        const themeBtn = document.getElementById('theme-btn');
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeBtn.innerText = '☀️ LIGHT MODE';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeBtn.innerText = '🌙 DARK MODE';
+        }
+    }
+
+    function loadThemePreference() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-btn').innerText = '☀️ LIGHT MODE';
+        }
+    }
+
+    // --- DATA SYNCING LOGIC ---
     async function loadData() {
         const syncBtn = document.getElementById('sync-btn-element');
         const timerText = document.getElementById('sync-timer-text');
@@ -336,6 +480,7 @@
         syncInterval = setInterval(loadData, 30000);
     }
 
+    // --- STRICT DD-MM-YYYY DATE FORMATTER ---
     function parseCustomDate(dateStr) {
         if (!dateStr) return 0;
         let str = String(dateStr).trim();
@@ -367,11 +512,14 @@
 
     function formatDateToDDMMYYYY(dateStr) {
         if (!dateStr) return '';
-        if (typeof dateStr === 'string' && /^\d{2}[-/]\d{2}[-/]\d{4}/.test(dateStr)) {
-            return dateStr.substring(0, 10).replace(/\//g, '-');
-        }
+        
         let parsedTime = parseCustomDate(dateStr);
-        if (parsedTime === 0) return String(dateStr).split('T')[0];
+        if (parsedTime === 0) {
+            if (typeof dateStr === 'string' && /^\d{2}[-/]\d{2}[-/]\d{4}/.test(dateStr)) {
+                return dateStr.substring(0, 10).replace(/\//g, '-');
+            }
+            return String(dateStr).split('T')[0];
+        }
 
         let d = new Date(parsedTime);
         let day = String(d.getDate()).padStart(2, '0');
@@ -380,7 +528,11 @@
         return `${day}-${month}-${year}`;
     }
 
-    function exportTableToCSV(filename) {
+    // --- CSV EXPORT (Reads pure text, ignoring HTML badges) ---
+    function exportTableToCSV() {
+        let titleElement = document.getElementById('dashboard-title');
+        let filename = (titleElement ? titleElement.innerText.trim() : "Task_Export") + ".csv";
+        
         let csv = [];
         let rows = document.querySelectorAll("table tr");
         
@@ -388,6 +540,7 @@
             if(rows[i].style.display !== "none") {
                 let row = [], cols = rows[i].querySelectorAll("td, th");
                 for (let j = 0; j < cols.length; j++) {
+                    // innerText automatically extracts text inside the <span> badge perfectly
                     let data = cols[j].innerText.replace(/"/g, '""');
                     row.push('"' + data + '"');
                 }
@@ -456,11 +609,9 @@
             return getStatusWeight(statusA) - getStatusWeight(statusB);
         });
 
-        // Initialize Dynamic Display Serial Number
         let displaySrNo = 1;
 
         validRows.forEach(r => {
-            // Auto-generate the sequential number
             let srNo = displaySrNo++; 
 
             let prop = r[propIdx] !== undefined ? r[propIdx] : '';
@@ -473,6 +624,7 @@
             
             let reqDateStr = formatDateToDDMMYYYY(reqDateRaw);
             let compDateStr = formatDateToDDMMYYYY(compDateRaw);
+            
             let status = r[statusIdx] !== undefined ? r[statusIdx] : '';
             let statusLower = String(status).trim().toLowerCase();
 
@@ -490,18 +642,18 @@
                 }
             }
 
-            let rowClass = 'row-default';
+            let badgeClass = 'badge-default';
 
             if (statusLower === 'done' || statusLower === 'completed') {
-                rowClass = 'row-done';
+                badgeClass = 'badge-done';
                 countDone++;
             } 
             else if (statusLower === 'pending') {
-                rowClass = 'row-pending';
+                badgeClass = 'badge-pending';
                 countPending++;
             } 
             else if (statusLower === 'in progress' || statusLower === 'in-progress' || statusLower === 'in process' || statusLower === 'in-process') {
-                rowClass = 'row-in-progress';
+                badgeClass = 'badge-in-progress';
                 countInProgress++;
             }
 
@@ -513,21 +665,37 @@
                 <td>${desc}</td>
                 <td>${reqDateStr}</td>
                 <td>${compDateStr}</td>
-                <td>${status}</td>
+                <td><span class="status-badge ${badgeClass}">${status}</span></td>
                 <td>${daysTaken}</td>
             `;
 
-            tbody.innerHTML += `<tr class="${rowClass}">${rowHtml}</tr>`;
+            tbody.innerHTML += `<tr>${rowHtml}</tr>`;
         });
 
+        // Update HUD display numbers
         document.getElementById('count-pending').innerText = countPending;
         document.getElementById('count-in-progress').innerText = countInProgress;
         document.getElementById('count-done').innerText = countDone;
+
+        // --- UPDATE PROGRESS BAR ---
+        let totalTasks = validRows.length;
+        let completionPercentage = 0;
+        
+        if (totalTasks > 0) {
+            completionPercentage = Math.round((countDone / totalTasks) * 100);
+        }
+        
+        document.getElementById('progress-text-display').innerText = completionPercentage + '%';
+        // Add a tiny delay to ensure the CSS animation fires smoothly after load
+        setTimeout(() => {
+            document.getElementById('progress-fill-bar').style.width = completionPercentage + '%';
+        }, 100);
 
         filterTable(); 
     }
 
     window.onload = () => {
+        loadThemePreference(); 
         forceSync(); 
     };
 </script>
