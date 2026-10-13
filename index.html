@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOGISMOS SYSTEM REQUIREMENTS AND ISSUES</title>
+    
+    <!-- SheetJS Library for Excel (.xlsx) Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         /* --- LIGHT MODE VARIABLES (DEFAULT) --- */
         :root { 
@@ -245,7 +249,6 @@
             transition: background 0.2s, color 0.3s; 
         }
 
-        /* Clean row hover effect (instead of full color rows) */
         tr:hover td { background-color: var(--row-hover) !important; }
 
         td:nth-child(4), th:nth-child(4), 
@@ -345,7 +348,7 @@
         <!-- VISUAL PROGRESS BAR -->
         <div class="progress-wrapper">
             <div class="progress-info">
-                <span>WORK COMPLETION</span>
+                <span>PROJECT COMPLETION</span>
                 <span id="progress-text-display">0%</span>
             </div>
             <div class="progress-track">
@@ -381,7 +384,8 @@
         <div class="controls-container">
             <div class="sync-text" id="sync-timer-text">NEXT SYNC IN: 30S</div>
             <div class="btn-group">
-                <button onclick="exportTableToCSV()">EXPORT CSV</button>
+                <!-- Changed to trigger Excel export -->
+                <button onclick="exportTableToExcel()">EXPORT EXCEL</button>
                 <button onclick="forceSync()" id="sync-btn-element">SYNC DATA</button>
             </div>
         </div>
@@ -528,34 +532,35 @@
         return `${day}-${month}-${year}`;
     }
 
-    // --- CSV EXPORT (Reads pure text, ignoring HTML badges) ---
-    function exportTableToCSV() {
+    // --- SMART EXCEL (.xlsx) EXPORT ---
+    function exportTableToExcel() {
+        // Dynamically get the title from the <h2> element
         let titleElement = document.getElementById('dashboard-title');
-        let filename = (titleElement ? titleElement.innerText.trim() : "Task_Export") + ".csv";
+        let filename = (titleElement ? titleElement.innerText.trim() : "Task_Export") + ".xlsx";
         
-        let csv = [];
+        let exportData = [];
         let rows = document.querySelectorAll("table tr");
         
+        // Loop through table and build 2D array of text
         for (let i = 0; i < rows.length; i++) {
             if(rows[i].style.display !== "none") {
-                let row = [], cols = rows[i].querySelectorAll("td, th");
+                let rowData = [];
+                let cols = rows[i].querySelectorAll("td, th");
                 for (let j = 0; j < cols.length; j++) {
-                    // innerText automatically extracts text inside the <span> badge perfectly
-                    let data = cols[j].innerText.replace(/"/g, '""');
-                    row.push('"' + data + '"');
+                    // innerText perfectly extracts just the text, ignoring HTML badges
+                    rowData.push(cols[j].innerText.trim());
                 }
-                csv.push(row.join(","));
+                exportData.push(rowData);
             }
         }
 
-        let csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
-        let downloadLink = document.createElement("a");
-        downloadLink.download = filename;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // Generate Excel Workbook
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(exportData);
+        XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+        
+        // Trigger download as .xlsx
+        XLSX.writeFile(wb, filename);
     }
 
     function renderDashboard(data) {
@@ -700,4 +705,4 @@
     };
 </script>
 </body>
-</html>
+</html>S
